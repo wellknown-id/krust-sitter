@@ -16,4 +16,4 @@ authors = [
 
 [workspace.dependencies]
 tree-sitter = { git = "https://github.com/jaboatman/tree-sitter", branch = "combined" }
-tree-sitter-generate = { git = "https://github.com/jaboatman/tree-sitter", branch = "combined" }
+tree-sitter-generate = { git = "https://github.com/jaboatman/tree-sitter", branch = "combined", default-features = false, features = ["load"] }
