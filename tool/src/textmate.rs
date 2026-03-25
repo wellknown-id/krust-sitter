@@ -121,7 +121,14 @@ impl TokenCollector {
     fn collect_rule(&mut self, _rule_name: &str, rule_def: &RuleDef) {
         // Try to detect begin/end pairs from SEQ structures first.
         if let Some(pair) = self.try_extract_begin_end(rule_def) {
-            self.begin_end_pairs.push(pair);
+            // Deduplicate: only add if we don't already have this begin/end pair.
+            if !self
+                .begin_end_pairs
+                .iter()
+                .any(|p| p.begin == pair.begin && p.end == pair.end)
+            {
+                self.begin_end_pairs.push(pair);
+            }
         }
         // Then collect individual tokens recursively.
         self.collect_tokens(rule_def);

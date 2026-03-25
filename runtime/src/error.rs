@@ -189,6 +189,15 @@ impl<'a> NodeError<'a> {
         self.node.is_missing()
     }
 
+    /// Returns true if this node is an "extra" (e.g. whitespace or comment).
+    ///
+    /// Extra error nodes are typically spurious: they arise from the word/extras
+    /// interaction in tree-sitter when identifier-like text appears inside
+    /// comment bodies.
+    pub fn is_extra(&self) -> bool {
+        self.node.is_extra()
+    }
+
     pub fn lookahead(
         &self,
         // grammar: Option<&'a crate::grammar::Grammar>,
