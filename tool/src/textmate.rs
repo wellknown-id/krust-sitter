@@ -12,6 +12,8 @@ pub fn generate_textmate(grammar: &Grammar, scope_name: Option<&str>) -> Value {
     let scope = scope_name.unwrap_or_else(|| lang_name.as_str());
 
     let mut collector = TokenCollector::new(scope);
+    // Collect comment patterns from extras.
+    collector.collect_extras(&grammar.extras);
     // Walk all rules to collect tokens.
     for (rule_name, rule_def) in &grammar.rules {
         collector.collect_rule(rule_name, rule_def);
@@ -45,10 +47,20 @@ struct BeginEndPair {
     name: String,
 }
 
+/// A comment pattern extracted from grammar extras.
+#[derive(Debug, Clone)]
+enum CommentPattern {
+    /// A single-line comment matched by a regex (e.g. `//.*$`).
+    Line { pattern: String, scope: String },
+    /// A block comment with begin/end markers (e.g. `/* ... */`).
+    Block { begin: String, end: String, scope: String },
+}
+
 /// Walks the Grammar IR and collects tokens into categories.
 struct TokenCollector {
     tokens: Vec<CollectedToken>,
     begin_end_pairs: Vec<BeginEndPair>,
+    comment_patterns: Vec<CommentPattern>,
     scope: String,
 }
 
@@ -57,7 +69,52 @@ impl TokenCollector {
         Self {
             tokens: Vec::new(),
             begin_end_pairs: Vec::new(),
+            comment_patterns: Vec::new(),
             scope: scope.to_string(),
+        }
+    }
+
+    /// Inspect grammar `extras` for comment-like patterns and collect them.
+    ///
+    /// Recognised heuristics:
+    /// - Regex containing `//` → line comment (emitted as `//.*$`)
+    /// - Regex containing `/\*` → block comment (emitted as `/* … */`)
+    fn collect_extras(&mut self, extras: &[RuleDef]) {
+        for extra in extras {
+            if let RuleDef::PATTERN { value, .. } = extra {
+                // Skip pure whitespace extras like `\s`
+                let trimmed = value.trim();
+                if trimmed == r"\s" || trimmed == r"\s+" {
+                    continue;
+                }
+
+                // Detect line-comment patterns (contain `//`)
+                if value.contains("//") {
+                    self.comment_patterns.push(CommentPattern::Line {
+                        pattern: "//.*$".to_string(),
+                        scope: format!("comment.line.double-slash.{}", self.scope),
+                    });
+                    continue;
+                }
+
+                // Detect block-comment patterns (contain `/*`)
+                if value.contains("/*") || value.contains(r"/\*") {
+                    self.comment_patterns.push(CommentPattern::Block {
+                        begin: r"/\*".to_string(),
+                        end: r"\*/".to_string(),
+                        scope: format!("comment.block.{}", self.scope),
+                    });
+                    continue;
+                }
+
+                // Detect `#`-style line comments
+                if value.starts_with('#') {
+                    self.comment_patterns.push(CommentPattern::Line {
+                        pattern: "#.*$".to_string(),
+                        scope: format!("comment.line.number-sign.{}", self.scope),
+                    });
+                }
+            }
         }
     }
 
@@ -152,6 +209,33 @@ impl TokenCollector {
     fn to_textmate_json(&self, lang_name: &str, scope: &str) -> Value {
         let mut top_patterns: Vec<Value> = Vec::new();
         let mut repository = serde_json::Map::new();
+
+        // --- Comments (emitted first so they take priority) ---
+        if !self.comment_patterns.is_empty() {
+            let mut comment_pats: Vec<Value> = Vec::new();
+            for cp in &self.comment_patterns {
+                match cp {
+                    CommentPattern::Line { pattern, scope } => {
+                        comment_pats.push(json!({
+                            "match": pattern,
+                            "name": scope
+                        }));
+                    }
+                    CommentPattern::Block { begin, end, scope } => {
+                        comment_pats.push(json!({
+                            "begin": begin,
+                            "end": end,
+                            "name": scope
+                        }));
+                    }
+                }
+            }
+            repository.insert(
+                "comments".to_string(),
+                json!({ "patterns": comment_pats }),
+            );
+            top_patterns.push(json!({ "include": "#comments" }));
+        }
 
         // --- Keywords ---
         let keywords: Vec<&CollectedToken> = self
@@ -530,7 +614,7 @@ mod tests {
             mod grammar {
                 #[derive(rust_sitter::Rule)]
                 #[language]
-                #[extras(re(r"\s"))  ]
+                #[extras(re(r"\s"), re(r"//[^\n]*"))]
                 pub enum Expression {
                     Number(
                         #[leaf(re(r"\d+"))]
@@ -546,6 +630,12 @@ mod tests {
 
         let grammar = grammar_from_mod(m);
         let textmate = generate_textmate(&grammar, None);
-        insta::assert_snapshot!(serde_json::to_string_pretty(&textmate).unwrap());
+        let json_str = serde_json::to_string_pretty(&textmate).unwrap();
+        // Verify the comment pattern is present in the output
+        assert!(
+            json_str.contains("comment.line.double-slash"),
+            "TextMate output should contain line comment scope: {json_str}"
+        );
+        insta::assert_snapshot!(json_str);
     }
 }

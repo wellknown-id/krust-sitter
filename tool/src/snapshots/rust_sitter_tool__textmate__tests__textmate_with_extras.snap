@@ -1,7 +1,7 @@
 ---
 source: tool/src/textmate.rs
-assertion_line: 549
-expression: "serde_json::to_string_pretty(&textmate).unwrap()"
+assertion_line: 639
+expression: json_str
 ---
 {
   "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
@@ -9,10 +9,21 @@ expression: "serde_json::to_string_pretty(&textmate).unwrap()"
   "scopeName": "source.Expression",
   "patterns": [
     {
+      "include": "#comments"
+    },
+    {
       "include": "#numbers"
     }
   ],
   "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "match": "//.*$",
+          "name": "comment.line.double-slash.Expression"
+        }
+      ]
+    },
     "numbers": {
       "patterns": [
         {
