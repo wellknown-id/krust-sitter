@@ -1,0 +1,41 @@
+---
+source: tool/src/textmate.rs
+assertion_line: 692
+expression: json_str
+---
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Expression",
+  "scopeName": "source.Expression",
+  "patterns": [
+    {
+      "include": "#comments"
+    },
+    {
+      "include": "#numbers"
+    }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "match": "//.*$",
+          "name": "comment.line.double-slash.Expression"
+        },
+        {
+          "begin": "/\\*",
+          "end": "\\*/",
+          "name": "comment.block.Expression"
+        }
+      ]
+    },
+    "numbers": {
+      "patterns": [
+        {
+          "match": "\\d+",
+          "name": "constant.numeric.Expression"
+        }
+      ]
+    }
+  }
+}

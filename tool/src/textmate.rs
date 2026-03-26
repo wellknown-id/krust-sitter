@@ -81,7 +81,14 @@ impl TokenCollector {
     /// - Regex containing `/\*` → block comment (emitted as `/* … */`)
     fn collect_extras(&mut self, extras: &[RuleDef]) {
         for extra in extras {
-            if let RuleDef::PATTERN { value, .. } = extra {
+            // Unwrap TOKEN/IMMEDIATE_TOKEN wrappers (e.g. from `token(re(...))`)
+            let inner = match extra {
+                RuleDef::TOKEN { content } | RuleDef::IMMEDIATE_TOKEN { content } => {
+                    content.as_ref()
+                }
+                other => other,
+            };
+            if let RuleDef::PATTERN { value, .. } = inner {
                 // Skip pure whitespace extras like `\s`
                 let trimmed = value.trim();
                 if trimmed == r"\s" || trimmed == r"\s+" {
@@ -642,6 +649,45 @@ mod tests {
         assert!(
             json_str.contains("comment.line.double-slash"),
             "TextMate output should contain line comment scope: {json_str}"
+        );
+        insta::assert_snapshot!(json_str);
+    }
+
+    #[test]
+    fn textmate_with_token_wrapped_extras() {
+        let m = if let syn::Item::Mod(m) = parse_quote! {
+            mod grammar {
+                #[derive(rust_sitter::Rule)]
+                #[language]
+                #[extras(
+                    token(re(r"\s+")),
+                    token(re(r"//[^\n]*")),
+                    token(re(r"/\*[^*]*\*+(?:[^/*][^*]*\*+)*/"))
+                )]
+                pub enum Expression {
+                    Number(
+                        #[leaf(re(r"\d+"))]
+                        i32
+                    ),
+                }
+            }
+        } {
+            m
+        } else {
+            panic!()
+        };
+
+        let grammar = grammar_from_mod(m);
+        let textmate = generate_textmate(&grammar, None);
+        let json_str = serde_json::to_string_pretty(&textmate).unwrap();
+        // Verify both comment patterns are present
+        assert!(
+            json_str.contains("comment.line.double-slash"),
+            "TextMate output should contain line comment scope: {json_str}"
+        );
+        assert!(
+            json_str.contains("comment.block"),
+            "TextMate output should contain block comment scope: {json_str}"
         );
         insta::assert_snapshot!(json_str);
     }
