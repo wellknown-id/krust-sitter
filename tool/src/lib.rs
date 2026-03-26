@@ -51,6 +51,27 @@ impl TextMateBuilder {
             }
         }
     }
+
+    /// Parse the grammar and generate preview highlighter files (JS + CSS) for
+    /// markdown preview integration.
+    pub fn build_preview<P>(self, root_file: &P, lang_name: &str) -> Option<textmate::PreviewFiles>
+    where
+        P: AsRef<Path> + ?Sized,
+    {
+        let root_file = syn_inline_mod::parse_and_inline_modules(root_file.as_ref());
+        match rust_sitter_common::expansion::generate_grammar(root_file.items) {
+            Err(e) => panic!("{e}"),
+            Ok(None) => None,
+            Ok(Some(grammar)) => {
+                let result = textmate::generate_preview(
+                    &grammar,
+                    self.scope_name.as_deref(),
+                    lang_name,
+                );
+                Some(result)
+            }
+        }
+    }
 }
 
 #[derive(Default)]
