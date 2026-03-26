@@ -458,7 +458,7 @@ impl TokenCollector {
                 .collect::<Vec<_>>()
                 .join("|");
             js.push_str(&format!(
-                "    {{ regex: /\\b(?:{kw_pattern})\\b/g, cls: '{lang_name}-keyword' }},\n"
+                "    {{ regex: /(?<![a-zA-Z0-9_-])(?:{kw_pattern})(?![a-zA-Z0-9_-])/g, cls: '{lang_name}-keyword' }},\n"
             ));
         }
 
