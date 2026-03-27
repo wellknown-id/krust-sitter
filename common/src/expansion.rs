@@ -122,6 +122,7 @@ impl ExpansionState {
                 word: None,
                 rules: Default::default(),
                 extras: Default::default(),
+                conflicts: Default::default(),
             },
             language_rule: None,
             error: None,

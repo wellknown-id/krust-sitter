@@ -14,6 +14,8 @@ pub struct Grammar {
     pub word: Option<String>,
     pub rules: IndexMap<String, RuleDef>,
     pub extras: Vec<RuleDef>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub conflicts: Vec<Vec<String>>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
