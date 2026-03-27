@@ -62,7 +62,10 @@ fn main() {
             "Repetition" => process_input::<repetitions::grammar::Repetitions>(input),
             "Optional" => process_input::<optionals::grammar::Language>(input),
             "Word" => process_input::<words::grammar::Words>(input),
-            _ => {}
+            other => panic!(
+                "Unknown grammar: '{}'. Valid options are: Expression, Repetition, Optional, Word",
+                other
+            ),
         }
     }
 }
