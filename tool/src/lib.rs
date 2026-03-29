@@ -63,11 +63,8 @@ impl TextMateBuilder {
             Err(e) => panic!("{e}"),
             Ok(None) => None,
             Ok(Some(grammar)) => {
-                let result = textmate::generate_preview(
-                    &grammar,
-                    self.scope_name.as_deref(),
-                    lang_name,
-                );
+                let result =
+                    textmate::generate_preview(&grammar, self.scope_name.as_deref(), lang_name);
                 Some(result)
             }
         }

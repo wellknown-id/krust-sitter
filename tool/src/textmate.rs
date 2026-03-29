@@ -53,7 +53,11 @@ enum CommentPattern {
     /// A single-line comment matched by a regex (e.g. `//.*$`).
     Line { pattern: String, scope: String },
     /// A block comment with begin/end markers (e.g. `/* ... */`).
-    Block { begin: String, end: String, scope: String },
+    Block {
+        begin: String,
+        end: String,
+        scope: String,
+    },
 }
 
 /// Walks the Grammar IR and collects tokens into categories.
@@ -244,10 +248,7 @@ impl TokenCollector {
                     }
                 }
             }
-            repository.insert(
-                "comments".to_string(),
-                json!({ "patterns": comment_pats }),
-            );
+            repository.insert("comments".to_string(), json!({ "patterns": comment_pats }));
             top_patterns.push(json!({ "include": "#comments" }));
         }
 
@@ -513,9 +514,7 @@ impl TokenCollector {
         js.push_str(&format!(
             "    document.querySelectorAll('code.language-{lang_name}').forEach(function (b) {{\n"
         ));
-        js.push_str(&format!(
-            "      if (b.dataset.{lang_name}Hl) return;\n"
-        ));
+        js.push_str(&format!("      if (b.dataset.{lang_name}Hl) return;\n"));
         js.push_str("      b.innerHTML = highlight(b.textContent);\n");
         js.push_str(&format!("      b.dataset.{lang_name}Hl = '1';\n"));
         js.push_str("    });\n");
@@ -557,7 +556,11 @@ pub struct PreviewFiles {
 }
 
 /// Generate preview highlighter files (JS + CSS) from a Grammar IR.
-pub fn generate_preview(grammar: &Grammar, scope_name: Option<&str>, lang_name: &str) -> PreviewFiles {
+pub fn generate_preview(
+    grammar: &Grammar,
+    scope_name: Option<&str>,
+    lang_name: &str,
+) -> PreviewFiles {
     let scope = scope_name.unwrap_or_else(|| lang_name);
 
     let mut collector = TokenCollector::new(scope);
