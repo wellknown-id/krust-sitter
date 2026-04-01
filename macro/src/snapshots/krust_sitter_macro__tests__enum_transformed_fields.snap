@@ -1,0 +1,83 @@
+---
+source: macro/src/lib.rs
+assertion_line: 118
+expression: "rustfmt_code(&expand_grammar(parse_quote!\n{\n    mod grammar\n    {\n        use krust_sitter::Rule; #[derive(Rule)] #[language] pub enum\n        Expression { Number(#[leaf(re(r\"\\d+\"))] i32), }\n    }\n}).to_token_stream().to_string())"
+---
+mod grammar {
+    use krust_sitter::Rule;
+    impl ::krust_sitter::rule::Language for Expression {
+        fn produce_grammar() -> String {
+            String::new()
+        }
+        fn language() -> ::krust_sitter::tree_sitter::Language {
+            unsafe extern "C" {
+                fn tree_sitter_Expression() -> ::krust_sitter::tree_sitter::Language;
+            }
+            unsafe { tree_sitter_Expression() }
+        }
+        #[doc = r" Parse an input string according to the grammar. Returns either any parsing errors that happened, or a"]
+        #[doc = "[`Expression`]"]
+        #[doc = r" instance containing the parsed structured data."]
+        fn parse(input: &str) -> ::krust_sitter::ParseResult<Self> {
+            ::krust_sitter::__private::parse(input, Self::language)
+        }
+    }
+    impl ::krust_sitter::Extract for Expression {
+        type Output = Self;
+        type LeafFn = ();
+        #[allow(non_snake_case)]
+        fn extract<'tree>(
+            ctx: &mut ::krust_sitter::extract::ExtractContext,
+            node: Option<::krust_sitter::tree_sitter::Node<'tree>>,
+            source: &[u8],
+            _l: Self::LeafFn,
+        ) -> Result<Self, ::krust_sitter::extract::ExtractError<'tree>> {
+            let node =
+                node.ok_or_else(|| ::krust_sitter::error::ExtractError::missing_node(ctx))?;
+            let mut cursor = node.walk();
+            if !cursor.goto_first_child() {
+                return Err(::krust_sitter::error::ExtractError::missing_node(ctx));
+            }
+            loop {
+                let node = cursor.node();
+                match node.kind() {
+                    "Expression_Number" => {
+                        return ::krust_sitter::__private::extract_struct_or_variant(
+                            stringify!(Expression::Number),
+                            node,
+                            move |state| {
+                                Ok(Expression::Number(
+                                    ::krust_sitter::__private::extract_field::<i32, _>(
+                                        ::krust_sitter::extract::BaseExtractor::default(),
+                                        (),
+                                        state,
+                                        ::krust_sitter::extract::ExtractFieldContext::new(
+                                            0u32,
+                                            false,
+                                            |state| {
+                                                match state { 0u32 => :: krust_sitter :: extract :: ExtractFieldState :: Complete , _ => :: krust_sitter :: extract :: ExtractFieldState :: Overflow , }
+                                            },
+                                        ),
+                                        source,
+                                        "0",
+                                    )?,
+                                ))
+                            },
+                        )
+                    }
+                    k => {
+                        if !cursor.goto_next_sibling() {
+                            return Err(::krust_sitter::error::ExtractError::missing_enum(ctx));
+                        }
+                    }
+                }
+            }
+        }
+    }
+    impl ::krust_sitter::rule::Rule for Expression {
+        const RULE_NAME: &'static str = "Expression";
+        fn produce_ast() -> String {
+            String::new()
+        }
+    }
+}

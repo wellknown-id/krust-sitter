@@ -1,6 +1,6 @@
 ---
 source: tool/src/textmate.rs
-assertion_line: 692
+assertion_line: 891
 expression: json_str
 ---
 {

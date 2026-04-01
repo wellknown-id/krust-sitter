@@ -1,6 +1,6 @@
 //! # DO NOT USE THIS MODULE!
 //!
-//! This module contains functions for use in the expanded macros produced by rust-sitter.
+//! This module contains functions for use in the expanded macros produced by krust-sitter.
 //! They need to be public so they can be accessed at all (\*cough\* macro hygiene), but
 //! they are not intended to actually be called in any other circumstance.
 

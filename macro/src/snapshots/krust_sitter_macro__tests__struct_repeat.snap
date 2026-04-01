@@ -1,0 +1,157 @@
+---
+source: macro/src/lib.rs
+assertion_line: 252
+expression: "rustfmt_code(&expand_grammar(parse_quote!\n{\n    mod grammar\n    {\n        #[derive(krust_sitter::Rule)] #[language] pub struct NumberList\n        { numbers: Vec<Number>, } #[derive(krust_sitter::Rule)] pub struct\n        Number { #[leaf(re(r\"\\d+\"))] v: i32 } #[derive(krust_sitter::Rule)]\n        #[extra] struct Whitespace\n        { #[leaf(pattern(r\"\\s\"))] _whitespace: (), }\n    }\n}).to_token_stream().to_string())"
+---
+mod grammar {
+    impl ::krust_sitter::rule::Language for NumberList {
+        fn produce_grammar() -> String {
+            String::new()
+        }
+        fn language() -> ::krust_sitter::tree_sitter::Language {
+            unsafe extern "C" {
+                fn tree_sitter_NumberList() -> ::krust_sitter::tree_sitter::Language;
+            }
+            unsafe { tree_sitter_NumberList() }
+        }
+        #[doc = r" Parse an input string according to the grammar. Returns either any parsing errors that happened, or a"]
+        #[doc = "[`NumberList`]"]
+        #[doc = r" instance containing the parsed structured data."]
+        fn parse(input: &str) -> ::krust_sitter::ParseResult<Self> {
+            ::krust_sitter::__private::parse(input, Self::language)
+        }
+    }
+    impl ::krust_sitter::Extract for NumberList {
+        type Output = Self;
+        type LeafFn = ();
+        #[allow(non_snake_case)]
+        fn extract<'tree>(
+            ctx: &mut ::krust_sitter::extract::ExtractContext,
+            node: Option<::krust_sitter::tree_sitter::Node<'tree>>,
+            source: &[u8],
+            _l: Self::LeafFn,
+        ) -> Result<Self, ::krust_sitter::extract::ExtractError<'tree>> {
+            let node =
+                node.ok_or_else(|| ::krust_sitter::error::ExtractError::missing_node(ctx))?;
+            ::krust_sitter::__private::extract_struct_or_variant(
+                stringify!(NumberList),
+                node,
+                move |state| {
+                    Ok(NumberList {
+                        numbers: ::krust_sitter::__private::extract_field::<Vec<Number>, _>(
+                            ::krust_sitter::extract::BaseExtractor::default(),
+                            (),
+                            state,
+                            ::krust_sitter::extract::ExtractFieldContext::new(
+                                2u32,
+                                true,
+                                |state| match state {
+                                    0u32 => ::krust_sitter::extract::ExtractFieldState::Str(
+                                        "Number", true, false,
+                                    ),
+                                    1u32 => ::krust_sitter::extract::ExtractFieldState::Repeat1,
+                                    2u32 => ::krust_sitter::extract::ExtractFieldState::Complete,
+                                    _ => ::krust_sitter::extract::ExtractFieldState::Overflow,
+                                },
+                            ),
+                            source,
+                            "numbers",
+                        )?,
+                    })
+                },
+            )
+        }
+    }
+    impl ::krust_sitter::rule::Rule for NumberList {
+        const RULE_NAME: &'static str = "NumberList";
+        fn produce_ast() -> String {
+            String::new()
+        }
+    }
+    impl ::krust_sitter::Extract for Number {
+        type Output = Self;
+        type LeafFn = ();
+        #[allow(non_snake_case)]
+        fn extract<'tree>(
+            ctx: &mut ::krust_sitter::extract::ExtractContext,
+            node: Option<::krust_sitter::tree_sitter::Node<'tree>>,
+            source: &[u8],
+            _l: Self::LeafFn,
+        ) -> Result<Self, ::krust_sitter::extract::ExtractError<'tree>> {
+            let node =
+                node.ok_or_else(|| ::krust_sitter::error::ExtractError::missing_node(ctx))?;
+            ::krust_sitter::__private::extract_struct_or_variant(
+                stringify!(Number),
+                node,
+                move |state| {
+                    Ok(Number {
+                        v: ::krust_sitter::__private::extract_field::<i32, _>(
+                            ::krust_sitter::extract::BaseExtractor::default(),
+                            (),
+                            state,
+                            ::krust_sitter::extract::ExtractFieldContext::new(
+                                0u32,
+                                false,
+                                |state| match state {
+                                    0u32 => ::krust_sitter::extract::ExtractFieldState::Complete,
+                                    _ => ::krust_sitter::extract::ExtractFieldState::Overflow,
+                                },
+                            ),
+                            source,
+                            "v",
+                        )?,
+                    })
+                },
+            )
+        }
+    }
+    impl ::krust_sitter::rule::Rule for Number {
+        const RULE_NAME: &'static str = "Number";
+        fn produce_ast() -> String {
+            String::new()
+        }
+    }
+    impl ::krust_sitter::Extract for Whitespace {
+        type Output = Self;
+        type LeafFn = ();
+        #[allow(non_snake_case)]
+        fn extract<'tree>(
+            ctx: &mut ::krust_sitter::extract::ExtractContext,
+            node: Option<::krust_sitter::tree_sitter::Node<'tree>>,
+            source: &[u8],
+            _l: Self::LeafFn,
+        ) -> Result<Self, ::krust_sitter::extract::ExtractError<'tree>> {
+            let node =
+                node.ok_or_else(|| ::krust_sitter::error::ExtractError::missing_node(ctx))?;
+            ::krust_sitter::__private::extract_struct_or_variant(
+                stringify!(Whitespace),
+                node,
+                move |state| {
+                    Ok(Whitespace {
+                        _whitespace: ::krust_sitter::__private::extract_field::<(), _>(
+                            ::krust_sitter::extract::BaseExtractor::default(),
+                            (),
+                            state,
+                            ::krust_sitter::extract::ExtractFieldContext::new(
+                                0u32,
+                                false,
+                                |state| match state {
+                                    0u32 => ::krust_sitter::extract::ExtractFieldState::Complete,
+                                    _ => ::krust_sitter::extract::ExtractFieldState::Overflow,
+                                },
+                            ),
+                            source,
+                            "_whitespace",
+                        )?,
+                    })
+                },
+            )
+        }
+    }
+    impl ::krust_sitter::rule::Rule for Whitespace {
+        const RULE_NAME: &'static str = "Whitespace";
+        fn produce_ast() -> String {
+            String::new()
+        }
+    }
+}

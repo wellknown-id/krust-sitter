@@ -2,7 +2,7 @@ use std::collections::HashSet;
 
 use super::*;
 use itertools::Itertools;
-use rust_sitter_types::grammar::Grammar;
+use krust_sitter_types::grammar::Grammar;
 use syn::{parse::Parse, punctuated::Punctuated, spanned::Spanned};
 
 #[derive(Debug)]
@@ -28,7 +28,7 @@ impl RuleDerive {
             };
             derives
                 .iter()
-                .any(|p| p == &parse_quote!(rust_sitter::Rule) || p == &parse_quote!(Rule))
+                .any(|p| p == &parse_quote!(krust_sitter::Rule) || p == &parse_quote!(Rule))
         }) {
             Ok(Some(Self::from_derive_input_known(d)?))
         } else {

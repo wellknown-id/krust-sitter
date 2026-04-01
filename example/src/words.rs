@@ -1,5 +1,5 @@
 pub mod grammar {
-    use rust_sitter::Rule;
+    use krust_sitter::Rule;
 
     #[derive(Debug, Rule)]
     #[language]
@@ -21,7 +21,7 @@ pub mod grammar {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rust_sitter::Language;
+    use krust_sitter::Language;
 
     #[test]
     fn words_grammar() {

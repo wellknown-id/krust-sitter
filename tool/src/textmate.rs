@@ -3,7 +3,7 @@
 //! This module converts a `Grammar` (the same IR used for Tree-Sitter generation)
 //! into a `.tmLanguage.json` value suitable for legacy syntax highlighters.
 
-use rust_sitter_types::grammar::{Grammar, RuleDef};
+use krust_sitter_types::grammar::{Grammar, RuleDef};
 use serde_json::{Value, json};
 
 /// Generate a complete `.tmLanguage.json` value from a Grammar IR.
@@ -656,7 +656,7 @@ fn extract_string_value(rule_def: &RuleDef) -> Option<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rust_sitter_common::expansion::generate_grammar;
+    use krust_sitter_common::expansion::generate_grammar;
     use syn::{ItemMod, parse_quote};
 
     fn grammar_from_mod(m: ItemMod) -> Grammar {
@@ -668,7 +668,7 @@ mod tests {
     fn textmate_simple_enum() {
         let m = if let syn::Item::Mod(m) = parse_quote! {
             mod grammar {
-                #[derive(rust_sitter::Rule)]
+                #[derive(krust_sitter::Rule)]
                 #[language]
                 pub enum Expr {
                     Number(
@@ -697,7 +697,7 @@ mod tests {
     fn textmate_arithmetic() {
         let m = if let syn::Item::Mod(m) = parse_quote! {
             mod grammar {
-                #[derive(rust_sitter::Rule)]
+                #[derive(krust_sitter::Rule)]
                 #[language]
                 #[extras(re(r"\s"))]
                 pub enum Expression {
@@ -710,7 +710,7 @@ mod tests {
                     Print(PrintExpression),
                 }
 
-                #[derive(rust_sitter::Rule)]
+                #[derive(krust_sitter::Rule)]
                 pub struct LetExpression {
                     #[text("let")]
                     _let: (),
@@ -720,7 +720,7 @@ mod tests {
                     pub val: Box<Expression>,
                 }
 
-                #[derive(rust_sitter::Rule)]
+                #[derive(krust_sitter::Rule)]
                 pub struct PrintExpression {
                     #[text("print")]
                     _print: (),
@@ -732,7 +732,7 @@ mod tests {
                     _rparen: (),
                 }
 
-                #[derive(rust_sitter::Rule)]
+                #[derive(krust_sitter::Rule)]
                 pub struct Ident(#[leaf(re(r"[a-zA-Z_][a-zA-Z_0-9]*"))] String);
             }
         } {
@@ -750,31 +750,31 @@ mod tests {
     fn textmate_if_statement() {
         let m = if let syn::Item::Mod(m) = parse_quote! {
             mod grammar {
-                #[derive(rust_sitter::Rule)]
+                #[derive(krust_sitter::Rule)]
                 #[language]
                 #[word(Identifier)]
                 pub struct Program(pub Vec<Statement>);
 
-                #[derive(rust_sitter::Rule)]
+                #[derive(krust_sitter::Rule)]
                 pub enum Statement {
                     ExpressionStatement(ExpressionStatement),
                     IfStatement(Box<IfStatement>),
                 }
 
-                #[derive(rust_sitter::Rule)]
+                #[derive(krust_sitter::Rule)]
                 pub enum Expression {
                     Identifier(Identifier),
                     Number(Number),
                 }
 
-                #[derive(rust_sitter::Rule)]
+                #[derive(krust_sitter::Rule)]
                 pub struct ExpressionStatement {
                     pub expression: Expression,
                     #[leaf(";")]
                     pub _semicolon: (),
                 }
 
-                #[derive(rust_sitter::Rule)]
+                #[derive(krust_sitter::Rule)]
                 #[prec_dynamic(1)]
                 pub struct IfStatement {
                     #[leaf("if")]
@@ -792,7 +792,7 @@ mod tests {
                     pub else_clause: Option<IfStatementElse>,
                 }
 
-                #[derive(rust_sitter::Rule)]
+                #[derive(krust_sitter::Rule)]
                 pub struct IfStatementElse {
                     #[leaf("else")]
                     pub _else: (),
@@ -803,11 +803,11 @@ mod tests {
                     pub _rbrace: (),
                 }
 
-                #[derive(rust_sitter::Rule)]
+                #[derive(krust_sitter::Rule)]
                 #[leaf(pattern("[a-zA-Z_][a-zA-Z0-9_]*"))]
                 pub struct Identifier;
 
-                #[derive(rust_sitter::Rule)]
+                #[derive(krust_sitter::Rule)]
                 pub struct Number(#[leaf(pattern(r"\d+"))] ());
             }
         } {
@@ -825,7 +825,7 @@ mod tests {
     fn textmate_with_extras() {
         let m = if let syn::Item::Mod(m) = parse_quote! {
             mod grammar {
-                #[derive(rust_sitter::Rule)]
+                #[derive(krust_sitter::Rule)]
                 #[language]
                 #[extras(re(r"\s"), re(r"//[^\n]*"))]
                 pub enum Expression {
@@ -856,7 +856,7 @@ mod tests {
     fn textmate_with_token_wrapped_extras() {
         let m = if let syn::Item::Mod(m) = parse_quote! {
             mod grammar {
-                #[derive(rust_sitter::Rule)]
+                #[derive(krust_sitter::Rule)]
                 #[language]
                 #[extras(
                     token(re(r"\s+")),

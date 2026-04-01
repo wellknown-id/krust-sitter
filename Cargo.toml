@@ -10,10 +10,9 @@ members = [
 [workspace.package]
 version = "0.5.0"
 authors = [
-  "Jason Boatman",
-  "Shadaj Laddad <shadaj@users.noreply.github.com>"
+  "wellknown.id ltd"
 ]
 
 [workspace.dependencies]
-tree-sitter = { git = "https://github.com/jaboatman/tree-sitter", branch = "combined" }
-tree-sitter-generate = { git = "https://github.com/jaboatman/tree-sitter", branch = "combined", default-features = false, features = ["load"] }
+tree-sitter = "0.26.8"
+tree-sitter-generate = { version = "0.26.8", default-features = false, features = ["load"] }

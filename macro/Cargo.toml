@@ -1,8 +1,8 @@
 [package]
-name = "rust-sitter-macro"
-description = "Procedural macros for Rust Sitter"
+name = "krust-sitter-macro"
+description = "Procedural macros for defining Krust Sitter grammars in Rust"
 readme = "../README.md"
-repository = "https://github.com/hydro-project/rust-sitter"
+repository = "https://github.com/wellknown-id/krust-sitter"
 version.workspace = true
 authors.workspace = true
 edition = "2024"
@@ -18,8 +18,8 @@ path = "src/lib.rs"
 syn = { version = "2", features = [ "full", "extra-traits" ] }
 quote = "1"
 proc-macro2 = "1"
-rust-sitter-common = { path = "../common" }
-rust-sitter-types = { path = "../types" }
+krust-sitter-common = { version = "0.5.0", path = "../common" }
+krust-sitter-types = { version = "0.5.0", path = "../types" }
 
 [dev-dependencies]
 insta = "1"

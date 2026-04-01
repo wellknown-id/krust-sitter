@@ -5,7 +5,7 @@ fn main() {
         let example = example.unwrap();
         let path = example.path();
         if path.is_file() && path.file_stem().unwrap().to_str().unwrap() != "main" {
-            rust_sitter_tool::build_parser(&path);
+            krust_sitter_tool::build_parser(&path);
         }
     }
 }

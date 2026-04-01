@@ -1,0 +1,126 @@
+---
+source: macro/src/lib.rs
+assertion_line: 339
+expression: "rustfmt_code(&expand_grammar(parse_quote!\n{\n    mod grammar\n    {\n        #[derive(krust_sitter::Rule)] #[language] pub enum Expr\n        {\n            Number(#[leaf(pattern(r\"\\d+\"))] u32), Neg\n            { #[leaf(\"!\")] _bang: (), value: Box<Expr>, }\n        }\n    }\n}).to_token_stream().to_string())"
+---
+mod grammar {
+    impl ::krust_sitter::rule::Language for Expr {
+        fn produce_grammar() -> String {
+            String::new()
+        }
+        fn language() -> ::krust_sitter::tree_sitter::Language {
+            unsafe extern "C" {
+                fn tree_sitter_Expr() -> ::krust_sitter::tree_sitter::Language;
+            }
+            unsafe { tree_sitter_Expr() }
+        }
+        #[doc = r" Parse an input string according to the grammar. Returns either any parsing errors that happened, or a"]
+        #[doc = "[`Expr`]"]
+        #[doc = r" instance containing the parsed structured data."]
+        fn parse(input: &str) -> ::krust_sitter::ParseResult<Self> {
+            ::krust_sitter::__private::parse(input, Self::language)
+        }
+    }
+    impl ::krust_sitter::Extract for Expr {
+        type Output = Self;
+        type LeafFn = ();
+        #[allow(non_snake_case)]
+        fn extract<'tree>(
+            ctx: &mut ::krust_sitter::extract::ExtractContext,
+            node: Option<::krust_sitter::tree_sitter::Node<'tree>>,
+            source: &[u8],
+            _l: Self::LeafFn,
+        ) -> Result<Self, ::krust_sitter::extract::ExtractError<'tree>> {
+            let node =
+                node.ok_or_else(|| ::krust_sitter::error::ExtractError::missing_node(ctx))?;
+            let mut cursor = node.walk();
+            if !cursor.goto_first_child() {
+                return Err(::krust_sitter::error::ExtractError::missing_node(ctx));
+            }
+            loop {
+                let node = cursor.node();
+                match node.kind() {
+                    "Expr_Number" => {
+                        return ::krust_sitter::__private::extract_struct_or_variant(
+                            stringify!(Expr::Number),
+                            node,
+                            move |state| {
+                                Ok(Expr::Number(::krust_sitter::__private::extract_field::<
+                                    u32,
+                                    _,
+                                >(
+                                    ::krust_sitter::extract::BaseExtractor::default(),
+                                    (),
+                                    state,
+                                    ::krust_sitter::extract::ExtractFieldContext::new(
+                                        0u32,
+                                        false,
+                                        |state| match state {
+                                            0u32 => {
+                                                ::krust_sitter::extract::ExtractFieldState::Complete
+                                            }
+                                            _ => {
+                                                ::krust_sitter::extract::ExtractFieldState::Overflow
+                                            }
+                                        },
+                                    ),
+                                    source,
+                                    "0",
+                                )?))
+                            },
+                        )
+                    }
+                    "Expr_Neg" => {
+                        return ::krust_sitter::__private::extract_struct_or_variant(
+                            stringify!(Expr::Neg),
+                            node,
+                            move |state| {
+                                Ok(Expr::Neg {
+                                    _bang: ::krust_sitter::__private::extract_field::<(), _>(
+                                        ::krust_sitter::extract::BaseExtractor::default(),
+                                        (),
+                                        state,
+                                        ::krust_sitter::extract::ExtractFieldContext::new(
+                                            1u32,
+                                            false,
+                                            |state| {
+                                                match state { 0u32 => :: krust_sitter :: extract :: ExtractFieldState :: Str ("!" , false , false) , 1u32 => :: krust_sitter :: extract :: ExtractFieldState :: Complete , _ => :: krust_sitter :: extract :: ExtractFieldState :: Overflow , }
+                                            },
+                                        ),
+                                        source,
+                                        "_bang",
+                                    )?,
+                                    value: ::krust_sitter::__private::extract_field::<Box<Expr>, _>(
+                                        ::krust_sitter::extract::BaseExtractor::default(),
+                                        (),
+                                        state,
+                                        ::krust_sitter::extract::ExtractFieldContext::new(
+                                            1u32,
+                                            false,
+                                            |state| {
+                                                match state { 0u32 => :: krust_sitter :: extract :: ExtractFieldState :: Str ("Expr" , true , false) , 1u32 => :: krust_sitter :: extract :: ExtractFieldState :: Complete , _ => :: krust_sitter :: extract :: ExtractFieldState :: Overflow , }
+                                            },
+                                        ),
+                                        source,
+                                        "value",
+                                    )?,
+                                })
+                            },
+                        )
+                    }
+                    k => {
+                        if !cursor.goto_next_sibling() {
+                            return Err(::krust_sitter::error::ExtractError::missing_enum(ctx));
+                        }
+                    }
+                }
+            }
+        }
+    }
+    impl ::krust_sitter::rule::Rule for Expr {
+        const RULE_NAME: &'static str = "Expr";
+        fn produce_ast() -> String {
+            String::new()
+        }
+    }
+}

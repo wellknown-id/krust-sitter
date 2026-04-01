@@ -1,6 +1,6 @@
 #[allow(dead_code)]
 pub mod grammar {
-    use rust_sitter::{Rule, Spanned};
+    use krust_sitter::{Rule, Spanned};
     #[derive(Debug, Rule)]
     #[language]
     #[extras(re(r"\s"))]
@@ -43,7 +43,7 @@ pub mod grammar {
 
 // TODO: Currently not allowed, needs to be fixed.
 // pub mod grammar2 {
-//     use rust_sitter::{Rule, Spanned};
+//     use krust_sitter::{Rule, Spanned};
 //
 //     #[derive(Debug, Rule)]
 //     #[language]
@@ -62,7 +62,7 @@ pub mod grammar {
 // }
 //
 // pub mod grammar3 {
-//     use rust_sitter::{Rule, Spanned};
+//     use krust_sitter::{Rule, Spanned};
 //
 //     #[derive(Debug, Rule)]
 //     #[language]
@@ -86,7 +86,7 @@ pub mod grammar {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rust_sitter::Language;
+    use krust_sitter::Language;
 
     #[test]
     fn repetitions_grammar() {

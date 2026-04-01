@@ -1,13 +1,13 @@
 use std::collections::{HashMap, HashSet};
 
 use crate::errors::IteratorExt as _;
-use proc_macro2::Span;
-use quote::{ToTokens, quote};
-use rust_sitter_common::{
+use krust_sitter_common::{
     expansion::{ExpansionState, RuleDerive},
     *,
 };
-use rust_sitter_types::grammar::{Grammar, RuleDef};
+use krust_sitter_types::grammar::{Grammar, RuleDef};
+use proc_macro2::Span;
+use quote::{ToTokens, quote};
 use syn::{spanned::Spanned, *};
 
 pub enum ParamOrField {
@@ -30,7 +30,7 @@ pub fn expand_rule(input: DeriveInput) -> Result<proc_macro2::TokenStream> {
     // compilation time but it is the best we can do for now. Probably isn't noticable in general.
     let d = RuleDerive::from_derive_input_known(input.clone())?;
     let mut ctx = ExpansionState::new();
-    rust_sitter_common::expansion::process_rule(d, &mut ctx)?;
+    krust_sitter_common::expansion::process_rule(d, &mut ctx)?;
 
     let ident = input.ident;
     let attrs = input.attrs;
@@ -45,18 +45,18 @@ pub fn expand_rule(input: DeriveInput) -> Result<proc_macro2::TokenStream> {
             )?;
 
             let extract_impl: Item = syn::parse_quote! {
-                impl ::rust_sitter::Extract for #ident {
+                impl ::krust_sitter::Extract for #ident {
                     type Output = Self;
                     type LeafFn = ();
                     #[allow(non_snake_case)]
                     fn extract<'tree>(
-                        ctx: &mut ::rust_sitter::extract::ExtractContext,
-                        node: Option<::rust_sitter::tree_sitter::Node<'tree>>,
+                        ctx: &mut ::krust_sitter::extract::ExtractContext,
+                        node: Option<::krust_sitter::tree_sitter::Node<'tree>>,
                         source: &[u8],
                         _l: Self::LeafFn,
-                    ) -> Result<Self, ::rust_sitter::extract::ExtractError<'tree>> {
+                    ) -> Result<Self, ::krust_sitter::extract::ExtractError<'tree>> {
                         let node = node.ok_or_else(|| {
-                            ::rust_sitter::error::ExtractError::missing_node(ctx)
+                            ::krust_sitter::error::ExtractError::missing_node(ctx)
                         })?;
                         #extract_expr
                     }
@@ -64,7 +64,7 @@ pub fn expand_rule(input: DeriveInput) -> Result<proc_macro2::TokenStream> {
             };
             let ident_str = ident.to_string();
             let rule_impl: Item = syn::parse_quote! {
-                impl ::rust_sitter::rule::Rule for #ident {
+                impl ::krust_sitter::rule::Rule for #ident {
                     const RULE_NAME: &'static str = #ident_str;
                     fn produce_ast() -> String {
                         String::new()
@@ -96,30 +96,30 @@ pub fn expand_rule(input: DeriveInput) -> Result<proc_macro2::TokenStream> {
             let enum_name = &ident;
             let ident_str = enum_name.to_string();
             let extract_impl: Item = syn::parse_quote! {
-                impl ::rust_sitter::Extract for #enum_name {
+                impl ::krust_sitter::Extract for #enum_name {
                     type Output = Self;
                     type LeafFn = ();
                     #[allow(non_snake_case)]
                     fn extract<'tree>(
-                        ctx: &mut ::rust_sitter::extract::ExtractContext,
-                        node: Option<::rust_sitter::tree_sitter::Node<'tree>>,
+                        ctx: &mut ::krust_sitter::extract::ExtractContext,
+                        node: Option<::krust_sitter::tree_sitter::Node<'tree>>,
                         source: &[u8],
                         _l: Self::LeafFn,
-                    ) -> Result<Self, ::rust_sitter::extract::ExtractError<'tree>> {
+                    ) -> Result<Self, ::krust_sitter::extract::ExtractError<'tree>> {
                         let node = node.ok_or_else(|| {
-                            ::rust_sitter::error::ExtractError::missing_node(ctx)
+                            ::krust_sitter::error::ExtractError::missing_node(ctx)
                         })?;
 
                         let mut cursor = node.walk();
                         if !cursor.goto_first_child() {
-                            return Err(::rust_sitter::error::ExtractError::missing_node(ctx));
+                            return Err(::krust_sitter::error::ExtractError::missing_node(ctx));
                         }
                         loop {
                             let node = cursor.node();
                             match node.kind() {
                                 #(#match_cases),*,
                                 k => if !cursor.goto_next_sibling() {
-                                    return Err(::rust_sitter::error::ExtractError::missing_enum(ctx));
+                                    return Err(::krust_sitter::error::ExtractError::missing_enum(ctx));
                                 }
                             }
                         }
@@ -128,7 +128,7 @@ pub fn expand_rule(input: DeriveInput) -> Result<proc_macro2::TokenStream> {
             };
 
             let rule_impl: Item = syn::parse_quote! {
-                impl ::rust_sitter::rule::Rule for #enum_name {
+                impl ::krust_sitter::rule::Rule for #enum_name {
                     const RULE_NAME: &'static str = #ident_str;
                     fn produce_ast() -> String {
                         String::new()
@@ -147,22 +147,22 @@ pub fn expand_rule(input: DeriveInput) -> Result<proc_macro2::TokenStream> {
 
         let root_type_docstr = format!("[`{ident}`]");
         quote! {
-            impl ::rust_sitter::rule::Language for #ident {
+            impl ::krust_sitter::rule::Language for #ident {
                 fn produce_grammar() -> String {
                     String::new()
                 }
 
-                fn language() -> ::rust_sitter::tree_sitter::Language {
+                fn language() -> ::krust_sitter::tree_sitter::Language {
                     unsafe extern "C" {
-                        fn #tree_sitter_ident() -> ::rust_sitter::tree_sitter::Language;
+                        fn #tree_sitter_ident() -> ::krust_sitter::tree_sitter::Language;
                     }
                     unsafe { #tree_sitter_ident() }
                 }
                 /// Parse an input string according to the grammar. Returns either any parsing errors that happened, or a
                 #[doc = #root_type_docstr]
                 /// instance containing the parsed structured data.
-                fn parse(input: &str) -> ::rust_sitter::ParseResult<Self> {
-                    ::rust_sitter::__private::parse(input, Self::language)
+                fn parse(input: &str) -> ::krust_sitter::ParseResult<Self> {
+                    ::krust_sitter::__private::parse(input, Self::language)
                 }
             }
         }
@@ -218,8 +218,8 @@ fn gen_field(ident_str: Option<&str>, leaf: Field, rule: &RuleDef) -> Result<Exp
     if should_skip {
         // TODO: Handle this correctly.
         return Ok(syn::parse_quote!({
-            ::rust_sitter::__private::skip_text(state, #ident_str)?;
-            Ok::<_, ::rust_sitter::extract::ExtractError>(())
+            ::krust_sitter::__private::skip_text(state, #ident_str)?;
+            Ok::<_, ::krust_sitter::extract::ExtractError>(())
         }));
     }
 
@@ -229,7 +229,7 @@ fn gen_field(ident_str: Option<&str>, leaf: Field, rule: &RuleDef) -> Result<Exp
         leaf_input.evaluate()?;
     }
 
-    let extractor: Expr = parse_quote! { ::rust_sitter::extract::BaseExtractor::default() };
+    let extractor: Expr = parse_quote! { ::krust_sitter::extract::BaseExtractor::default() };
 
     let (leaf_type, leaf_fn): (Type, Expr) = match transform {
         Some(closure) => {
@@ -247,7 +247,7 @@ fn gen_field(ident_str: Option<&str>, leaf: Field, rule: &RuleDef) -> Result<Exp
     let extract_state = rule_def_to_extract(rule)?;
 
     Ok(parse_quote! {
-        ::rust_sitter::__private::extract_field::<#leaf_type, _>(#extractor, #leaf_fn, state, #extract_state, source, #ident_str)
+        ::krust_sitter::__private::extract_field::<#leaf_type, _>(#extractor, #leaf_fn, state, #extract_state, source, #ident_str)
     })
 }
 
@@ -381,7 +381,7 @@ fn gen_struct_or_variant(
     };
 
     Ok(
-        syn::parse_quote!(::rust_sitter::__private::extract_struct_or_variant(
+        syn::parse_quote!(::krust_sitter::__private::extract_struct_or_variant(
                 stringify!(#construct_name),
                 node,
                 move |state| #construct_expr
@@ -408,11 +408,11 @@ fn rule_def_to_extract(def: &RuleDef) -> Result<proc_macro2::TokenStream> {
         }
     });
     Ok(quote! {
-        ::rust_sitter::extract::ExtractFieldContext::new(#num_states, #optional, |state| {
+        ::krust_sitter::extract::ExtractFieldContext::new(#num_states, #optional, |state| {
             match state {
                 #(#states)*
-                #num_states => ::rust_sitter::extract::ExtractFieldState::Complete,
-                _ => ::rust_sitter::extract::ExtractFieldState::Overflow,
+                #num_states => ::krust_sitter::extract::ExtractFieldState::Complete,
+                _ => ::krust_sitter::extract::ExtractFieldState::Overflow,
             }
         })
     })
@@ -425,12 +425,12 @@ fn rule_def_add_state(def: &RuleDef, optional: bool, states: &mut Vec<proc_macro
             // grammars. If it exists here, then we need to return a special state which embeds the
             // inner state within it.
             quote! {
-                ::rust_sitter::extract::ExtractFieldState::Str(#name, true, #optional)
+                ::krust_sitter::extract::ExtractFieldState::Str(#name, true, #optional)
             }
         }
         RuleDef::STRING { value } => {
             quote! {
-                ::rust_sitter::extract::ExtractFieldState::Str(#value, false, #optional)
+                ::krust_sitter::extract::ExtractFieldState::Str(#value, false, #optional)
             }
         }
         RuleDef::BLANK => return,
@@ -455,7 +455,7 @@ fn rule_def_add_state(def: &RuleDef, optional: bool, states: &mut Vec<proc_macro
                     _ => panic!("CHOICE cannot use {s:#?} currently"),
                 });
                 quote! {
-                    ::rust_sitter::extract::ExtractFieldState::Choice(&[#(#strs),*], #optional)
+                    ::krust_sitter::extract::ExtractFieldState::Choice(&[#(#strs),*], #optional)
                 }
             }
         }
@@ -496,7 +496,7 @@ fn rule_def_add_state(def: &RuleDef, optional: bool, states: &mut Vec<proc_macro
                 _ => panic!("sep_by can only use SYMBOL or STRING currently"),
             };
             quote! {
-                ::rust_sitter::extract::ExtractFieldState::Repeat(#value, #named)
+                ::krust_sitter::extract::ExtractFieldState::Repeat(#value, #named)
             }
         }
         RuleDef::REPEAT1 { content } => match &**content {
@@ -511,7 +511,7 @@ fn rule_def_add_state(def: &RuleDef, optional: bool, states: &mut Vec<proc_macro
                     _ => panic!("sep_by can only use SYMBOL or STRING currently"),
                 };
                 quote! {
-                    ::rust_sitter::extract::ExtractFieldState::Repeat(#value, #named)
+                    ::krust_sitter::extract::ExtractFieldState::Repeat(#value, #named)
                 }
             }
             RuleDef::FIELD { name: _, content } => {
@@ -523,7 +523,7 @@ fn rule_def_add_state(def: &RuleDef, optional: bool, states: &mut Vec<proc_macro
                 // would need to check that the first value isn't the repeat value.
                 rule_def_add_state(content, optional, states);
                 quote! {
-                    ::rust_sitter::extract::ExtractFieldState::Repeat1
+                    ::krust_sitter::extract::ExtractFieldState::Repeat1
                 }
             }
             _ => panic!("Unsupported input in REPEAT1"),

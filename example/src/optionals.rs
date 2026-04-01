@@ -1,7 +1,7 @@
 #[allow(dead_code)]
 pub mod grammar {
-    use rust_sitter::Rule;
-    use rust_sitter::Spanned;
+    use krust_sitter::Rule;
+    use krust_sitter::Spanned;
 
     #[derive(Debug, Rule)]
     #[language]
@@ -24,7 +24,7 @@ pub mod grammar {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rust_sitter::Language;
+    use krust_sitter::Language;
 
     #[test]
     fn optional_grammar() {

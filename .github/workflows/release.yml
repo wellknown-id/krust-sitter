@@ -1,0 +1,136 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+env:
+  CARGO_TERM_COLOR: always
+
+permissions:
+  contents: write
+
+jobs:
+  verify:
+    name: Verify release
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install stable Rust with rustfmt and clippy
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+          targets: wasm32-unknown-unknown
+
+      - name: Cache Rust build artifacts
+        uses: Swatinem/rust-cache@v2
+
+      - name: Check tag matches workspace version
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag_version="${GITHUB_REF_NAME#v}"
+          cargo_version="$(python - <<'PY'
+          import tomllib
+          from pathlib import Path
+          data = tomllib.loads(Path('Cargo.toml').read_text())
+          print(data['workspace']['package']['version'])
+          PY
+          )"
+          if [[ "$tag_version" != "$cargo_version" ]]; then
+            echo "Tag version $tag_version does not match workspace version $cargo_version" >&2
+            exit 1
+          fi
+
+      - name: Check formatting
+        run: cargo fmt --all -- --check
+
+      - name: Run Clippy
+        run: cargo clippy --workspace --all-targets -- -D warnings
+
+      - name: Run tests
+        run: cargo test --workspace --locked
+
+      - name: Install wasm-bindgen test runner
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(cargo pkgid wasm-bindgen-shared | cut -d '@' -f2)"
+          cargo install --locked wasm-bindgen-cli --version "$version"
+
+      - name: Run wasm tests
+        env:
+          CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUNNER: wasm-bindgen-test-runner
+        run: cargo test -p krust-sitter-example --target wasm32-unknown-unknown --locked --no-fail-fast
+
+      - name: Verify package contents
+        run: |
+          cargo package -p krust-sitter-types --locked --allow-dirty --no-verify
+          cargo package -p krust-sitter-common --locked --allow-dirty --no-verify
+          cargo package -p krust-sitter-macro --locked --allow-dirty --no-verify
+          cargo package -p krust-sitter --locked --allow-dirty --no-verify
+          cargo package -p krust-sitter-tool --locked --allow-dirty --no-verify
+
+  publish:
+    name: Publish crates
+    runs-on: ubuntu-latest
+    needs: verify
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install stable Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust build artifacts
+        uses: Swatinem/rust-cache@v2
+
+      - name: Publish crates to crates.io
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          version="${GITHUB_REF_NAME#v}"
+          crates=(
+            krust-sitter-types
+            krust-sitter-common
+            krust-sitter-macro
+            krust-sitter
+            krust-sitter-tool
+          )
+
+          wait_for_crate() {
+            local crate="$1"
+            local version="$2"
+
+            for _ in $(seq 1 30); do
+              if curl --silent --show-error --fail "https://crates.io/api/v1/crates/${crate}/${version}" >/dev/null; then
+                return 0
+              fi
+              sleep 10
+            done
+
+            echo "Timed out waiting for ${crate} ${version} to appear on crates.io" >&2
+            return 1
+          }
+
+          for crate in "${crates[@]}"; do
+            cargo publish -p "$crate" --locked
+            wait_for_crate "$crate" "$version"
+          done
+
+  github-release:
+    name: Create GitHub release
+    runs-on: ubuntu-latest
+    needs: publish
+
+    steps:
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true

@@ -118,7 +118,7 @@ mod tests {
         insta::assert_snapshot!(rustfmt_code(
             &expand_grammar(parse_quote! {
                 mod grammar {
-                    use rust_sitter::Rule;
+                    use krust_sitter::Rule;
                     #[derive(Rule)]
                     #[language]
                     pub enum Expression {
@@ -141,7 +141,7 @@ mod tests {
         insta::assert_snapshot!(rustfmt_code(
             &expand_grammar(parse_quote! {
                 mod grammar {
-                    #[derive(rust_sitter::Rule)]
+                    #[derive(krust_sitter::Rule)]
                     #[language]
                     pub enum Expression {
                         Number(
@@ -168,7 +168,7 @@ mod tests {
         insta::assert_snapshot!(rustfmt_code(
             &expand_grammar(parse_quote! {
                 mod grammar {
-                    #[derive(rust_sitter::Rule)]
+                    #[derive(krust_sitter::Rule)]
                     #[language]
                     pub enum Expression {
                         Number(
@@ -197,7 +197,7 @@ mod tests {
         insta::assert_snapshot!(rustfmt_code(
             &expand_grammar(parse_quote! {
                 mod grammar {
-                    #[derive(rust_sitter::Rule)]
+                    #[derive(krust_sitter::Rule)]
                     #[language]
                     pub enum Expression {
                         Number(
@@ -225,13 +225,13 @@ mod tests {
         insta::assert_snapshot!(rustfmt_code(
             &expand_grammar(parse_quote! {
                 mod grammar {
-                    #[derive(rust_sitter::Rule)]
+                    #[derive(krust_sitter::Rule)]
                     #[language]
                     pub struct Language {
                         e: Expression,
                     }
 
-                    #[derive(rust_sitter::Rule)]
+                    #[derive(krust_sitter::Rule)]
                     pub enum Expression {
                         Number(
                             #[leaf(re(r"\d+"))]
@@ -252,19 +252,19 @@ mod tests {
         insta::assert_snapshot!(rustfmt_code(
             &expand_grammar(parse_quote! {
                 mod grammar {
-                    #[derive(rust_sitter::Rule)]
+                    #[derive(krust_sitter::Rule)]
                     #[language]
                     pub struct NumberList {
                         numbers: Vec<Number>,
                     }
 
-                    #[derive(rust_sitter::Rule)]
+                    #[derive(krust_sitter::Rule)]
                     pub struct Number {
                         #[leaf(re(r"\d+"))]
                         v: i32
                     }
 
-                    #[derive(rust_sitter::Rule)]
+                    #[derive(krust_sitter::Rule)]
                     #[extra]
                     struct Whitespace {
                         #[leaf(pattern(r"\s"))]
@@ -284,7 +284,7 @@ mod tests {
         insta::assert_snapshot!(rustfmt_code(
             &expand_grammar(parse_quote! {
                 mod grammar {
-                    #[derive(rust_sitter::Rule)]
+                    #[derive(krust_sitter::Rule)]
                     #[language]
                     pub struct Language {
                         #[leaf(re(r"\d+"))]
@@ -292,7 +292,7 @@ mod tests {
                         t: Option<Number>,
                     }
 
-                    #[derive(rust_sitter::Rule)]
+                    #[derive(krust_sitter::Rule)]
                     pub struct Number {
                         #[leaf(re(r"\d+"))]
                         v: i32
@@ -311,13 +311,13 @@ mod tests {
         insta::assert_snapshot!(rustfmt_code(
             &expand_grammar(parse_quote! {
                 mod grammar {
-                    #[derive(rust_sitter::Rule)]
+                    #[derive(krust_sitter::Rule)]
                     pub struct Number {
                             #[leaf(re(r"\d+"))]
                             value: u32
                     }
 
-                    #[derive(rust_sitter::Rule)]
+                    #[derive(krust_sitter::Rule)]
                     #[language]
                     pub enum Expr {
                         Numbers(
@@ -339,7 +339,7 @@ mod tests {
         insta::assert_snapshot!(rustfmt_code(
             &expand_grammar(parse_quote! {
                 mod grammar {
-                    #[derive(rust_sitter::Rule)]
+                    #[derive(krust_sitter::Rule)]
                     #[language]
                     pub enum Expr {
                         Number(
@@ -366,7 +366,7 @@ mod tests {
         insta::assert_snapshot!(rustfmt_code(
             &expand_grammar(parse_quote! {
                 mod grammar {
-                    use rust_sitter::{Rule, Spanned};
+                    use krust_sitter::{Rule, Spanned};
 
                     #[derive(Rule)]
                     #[language]

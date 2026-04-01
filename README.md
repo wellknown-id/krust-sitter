@@ -1,9 +1,10 @@
-# Rust Sitter - Otonoma fork
+# Krust Sitter
 
-**This project is a fork of [rust-sitter](https://github.com/hydro-project/rust-sitter). It has been heavily
-modified in many breaking ways.**
+**Krust Sitter is a maintained fork of [rust-sitter](https://github.com/hydro-project/rust-sitter), developed and maintained by wellknown.id ltd.**
 
-Rust Sitter makes it easy to create efficient parsers in Rust by leveraging the [Tree Sitter](https://tree-sitter.github.io/tree-sitter/) parser generator. With Rust Sitter, you can define your entire grammar with annotations on idiomatic Rust code, and let macros generate the parser and type-safe bindings for you!
+Repository: <https://github.com/wellknown-id/krust-sitter>
+
+Krust Sitter makes it easy to create efficient parsers in Rust by leveraging the [Tree Sitter](https://tree-sitter.github.io/tree-sitter/) parser generator. With Krust Sitter, you can define your entire grammar with annotations on idiomatic Rust code, and let macros generate the parser and type-safe bindings for you!
 
 ## Installation
 
@@ -11,10 +12,10 @@ First, add Rust/Tree Sitter to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-rust-sitter = { git = "https://github.com/benbenbenbenbenben/krust-sitter" }
+krust-sitter = { git = "https://github.com/wellknown-id/krust-sitter" }
 
 [build-dependencies]
-rust-sitter-tool = { git = "https://github.com/benbenbenbenbenben/krust-sitter" }
+krust-sitter-tool = { git = "https://github.com/wellknown-id/krust-sitter" }
 ```
 
 The first step is to configure your `build.rs` to compile and link the generated Tree Sitter parser:
@@ -25,13 +26,13 @@ use std::path::PathBuf;
 fn main() {
     println!("cargo:rerun-if-changed=src");
     // Path to the file containing your grammar and any submodules.
-    rust_sitter_tool::build_parsers("src/grammar/mod.rs"));
+    krust_sitter_tool::build_parser("src/grammar/mod.rs");
 }
 ```
 
 ## Defining a Grammar
 
-Now that we have Rust Sitter added to our project, we can define our grammar. Rust Sitter grammars are defined in Rust modules. First, we create a module file for the grammar in `src/grammar/mod.rs`. Note, this can be any module, however,
+Now that we have Krust Sitter added to our project, we can define our grammar. Krust Sitter grammars are defined in Rust modules. First, we create a module file for the grammar in `src/grammar/mod.rs`. Note, this can be any module, however,
 due to various quirks with the build system it is required that you have one grammar per module, and all types
 in the grammar are defined within it, or a submodule of the module.
 
@@ -39,7 +40,7 @@ Then, inside the module, we can define individual AST nodes. For this simple exa
 
 ```rust
 // in ./src/grammar/mod.rs
-use rust_sitter::Rule;
+use krust_sitter::Rule;
 #[derive(Rule)]
 #[language]
 pub enum Expr {
@@ -69,7 +70,7 @@ Add(
 )
 ```
 
-If we try to compile this grammar, however, we will see ane error due to conflicting parse trees for expressions like `1 + 2 + 3`, which could be parsed as `(1 + 2) + 3` or `1 + (2 + 3)`. We want the former, so we can add a further annotation specifying that we want left-associativity for this rule.
+If we try to compile this grammar, however, we will see an error due to conflicting parse trees for expressions like `1 + 2 + 3`, which could be parsed as `(1 + 2) + 3` or `1 + (2 + 3)`. We want the former, so we can add a further annotation specifying that we want left-associativity for this rule.
 
 ```rust
 #[prec_left(1)]
@@ -83,7 +84,7 @@ Add(
 All together, our grammar looks like this:
 
 ```rust
-use rust_sitter::Rule;
+use krust_sitter::Rule;
 #[derive(Rule)]
 #[language]
 pub enum Expr {
@@ -125,7 +126,7 @@ grammar::Expr::parse("1+2+3").into_result() = Ok(Add(
 
 ## Type Annotations
 
-Rust Sitter supports a number of annotations that can be applied to type and fields in your grammar. These annotations can be used to control how the parser behaves, and how the resulting AST is constructed.
+Krust Sitter supports a number of annotations that can be applied to type and fields in your grammar. These annotations can be used to control how the parser behaves, and how the resulting AST is constructed.
 
 ### `#[language]`
 
@@ -223,15 +224,19 @@ pub struct Ident;
 
 ## Partial AST and Errors
 
-rust-sitter, like tree-sitter, can produce a partial AST along with its errors. Calling `Language::parse` will
+Krust Sitter, like tree-sitter, can produce a partial AST along with its errors. Calling `Language::parse` will
 produce a `ParseResult` object which includes as much of the AST as it was able to extract, as well as a `Vec`
 of all of the parsing errors encountered. This is useful for language servers and other contexts which can
 make use of a partial AST. Currently this may not produce the _maximal_ AST, but this may be possible
 in the future.
 
+## Credits
+
+See [`CREDITS.md`](./CREDITS.md) for attribution to the original `rust-sitter` project and the creators of this fork.
+
 ## Special Types
 
-Rust Sitter has a few special types that can be used to define more complex grammars.
+Krust Sitter has a few special types that can be used to define more complex grammars.
 
 ### `Vec<T>`
 
@@ -270,9 +275,9 @@ pub struct CommaSeparatedExprs {
 }
 ```
 
-### `rust_sitter::Spanned<T>`
+### `krust_sitter::Spanned<T>`
 
-When using Rust Sitter to power diagnostic tools, it can be helpful to access spans marking the sections of text corresponding to a parsed node. To do this, you can use the `Spanned<T>` type, which captures the underlying parsed `T` and a pair of indices for the start (inclusive) and end (exclusive) of the corresponding substring. `Spanned` types can be used anywhere, and do not affect the parsing logic. For example, we could capture the spans of the expressions in our previous example:
+When using Krust Sitter to power diagnostic tools, it can be helpful to access spans marking the sections of text corresponding to a parsed node. To do this, you can use the `Spanned<T>` type, which captures the underlying parsed `T` and a pair of indices for the start (inclusive) and end (exclusive) of the corresponding substring. `Spanned` types can be used anywhere, and do not affect the parsing logic. For example, we could capture the spans of the expressions in our previous example:
 
 ```rust
 pub struct CommaSeparatedExprs {
@@ -283,11 +288,11 @@ pub struct CommaSeparatedExprs {
 
 ### `Box<T>`
 
-Boxes are automatically constructed around the inner type when parsing, but Rust Sitter doesn't do anything extra beyond that.
+Boxes are automatically constructed around the inner type when parsing, but Krust Sitter doesn't do anything extra beyond that.
 
 ## TextMate Grammar Generation
 
-Rust Sitter can also generate `.tmLanguage.json` grammars for legacy syntax highlighters (VS Code, Sublime Text, etc.) from the same grammar definitions used for Tree Sitter parsing.
+Krust Sitter can also generate `.tmLanguage.json` grammars for legacy syntax highlighters (VS Code, Sublime Text, etc.) from the same grammar definitions used for Tree Sitter parsing.
 
 ### Setup
 
@@ -298,10 +303,10 @@ fn main() {
     println!("cargo:rerun-if-changed=src");
 
     // Generate Tree Sitter parser (existing)
-    rust_sitter_tool::build_parser("src/grammar/mod.rs");
+    krust_sitter_tool::build_parser("src/grammar/mod.rs");
 
     // Generate TextMate grammar (new)
-    if let Some(textmate) = rust_sitter_tool::TextMateBuilder::default()
+    if let Some(textmate) = krust_sitter_tool::TextMateBuilder::default()
         .scope_name("my-language")
         .build("src/grammar/mod.rs")
     {

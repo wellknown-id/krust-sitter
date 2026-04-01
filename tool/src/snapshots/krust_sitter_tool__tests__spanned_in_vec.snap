@@ -1,5 +1,6 @@
 ---
 source: tool/src/lib.rs
+assertion_line: 646
 expression: grammar
 ---
 {"name":"NumberList","word":null,"rules":{"source_file":{"type":"SEQ","members":[{"type":"CHOICE","members":[{"type":"BLANK"},{"type":"FIELD","name":"numbers","content":{"type":"REPEAT1","content":{"type":"FIELD","name":"numbers","content":{"type":"PATTERN","value":"\\d+"}}}}]}]},"NumberList":{"type":"SEQ","members":[{"type":"CHOICE","members":[{"type":"BLANK"},{"type":"FIELD","name":"numbers","content":{"type":"REPEAT1","content":{"type":"FIELD","name":"numbers","content":{"type":"PATTERN","value":"\\d+"}}}}]}]}},"extras":[{"type":"PATTERN","value":"\\s"}]}

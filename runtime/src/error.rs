@@ -76,6 +76,32 @@ pub struct NodeError<'a> {
 }
 
 impl<'a> NodeError<'a> {
+    fn first_error_child(&self) -> Option<tree_sitter::Node<'a>> {
+        let mut cursor = self.node.walk();
+        self.node
+            .children(&mut cursor)
+            .find(|child| child.is_error() || child.is_missing() || child.has_error())
+    }
+
+    fn error_node(node: tree_sitter::Node<'a>) -> Option<tree_sitter::Node<'a>> {
+        if node.is_error() || node.is_missing() {
+            return Some(node);
+        }
+
+        let mut cursor = node.walk();
+        for child in node.children(&mut cursor) {
+            if let Some(err) = Self::error_node(child) {
+                return Some(err);
+            }
+        }
+
+        None
+    }
+
+    fn first_error_node(&self) -> tree_sitter::Node<'a> {
+        Self::error_node(self.node).unwrap_or(self.node)
+    }
+
     pub fn to_parse_error(&self) -> ParseError {
         // Handle missing shift.
         let mut node_position = Position::new(self.node_byte_range(), self.point_range());
@@ -152,7 +178,7 @@ impl<'a> NodeError<'a> {
 
     /// Byte range of the portion of the text which created the error.
     pub fn error_byte_range(&self) -> Range<usize> {
-        self.node.error_byte_range().unwrap()
+        self.first_error_node().byte_range()
     }
 
     pub fn point_range(&self) -> (Point, Point) {
@@ -162,13 +188,14 @@ impl<'a> NodeError<'a> {
     }
 
     pub fn error_point_range(&self) -> (Point, Point) {
-        let start = self.node.error_start_position().unwrap();
-        let end = self.node.error_end_position().unwrap();
+        let node = self.first_error_node();
+        let start = node.start_position();
+        let end = node.end_position();
         (Point::from_tree_sitter(start), Point::from_tree_sitter(end))
     }
 
     pub fn first_error_point_range(&self) -> (Point, Point) {
-        match self.node.error_child(0) {
+        match self.first_error_child() {
             None => self.error_point_range(),
             Some(c) => {
                 let start = c.start_position();
@@ -179,7 +206,7 @@ impl<'a> NodeError<'a> {
     }
 
     pub fn first_error_byte_range(&self) -> Range<usize> {
-        match self.node.error_child(0) {
+        match self.first_error_child() {
             None => self.error_byte_range(),
             Some(c) => c.byte_range(),
         }
@@ -202,17 +229,17 @@ impl<'a> NodeError<'a> {
         &self,
         // grammar: Option<&'a crate::grammar::Grammar>,
     ) -> Option<impl Iterator<Item = &'static str>> {
-        let (state, reachable, filter) = if self.node.is_missing() {
+        let (state, reachable) = if self.node.is_missing() {
             // Handle the lookahead appropriately for missing.
             let state = self.node.parse_state();
-            (state, None, true)
+            (state, None)
         } else {
             // Find the endpoint.
             // let (node, ctx) = match self.node.error_child(0) {
             //     Some(c) => (c, self.node.child(0).unwrap()),
             //     None => (self.node, self.node),
             // };
-            let node = match self.node.error_child(0) {
+            let node = match self.first_error_child() {
                 Some(c) => c,
                 None => self.node,
             };
@@ -226,8 +253,7 @@ impl<'a> NodeError<'a> {
             let reachable = None;
 
             let state = node.parse_state();
-            // NOTE: We may want to always filter these.
-            (state, reachable, false)
+            (state, reachable)
         };
 
         if state == 0 {
@@ -240,7 +266,6 @@ impl<'a> NodeError<'a> {
         Some(ErrorLookahead {
             it,
             language,
-            filter_non_action: filter,
             state,
             reachable,
         })
@@ -250,7 +275,6 @@ impl<'a> NodeError<'a> {
 struct ErrorLookahead<'a> {
     it: tree_sitter::LookaheadIterator,
     language: tree_sitter::Language,
-    filter_non_action: bool,
     state: u16,
     reachable: Option<HashSet<&'a str>>,
 }
@@ -263,9 +287,6 @@ impl Iterator for ErrorLookahead<'_> {
             let sym = self.it.current_symbol();
             // skip the end symbol, it isn't useful here.
             if sym == 0 {
-                continue;
-            }
-            if self.filter_non_action && !self.it.has_actions() {
                 continue;
             }
             // Maybe we want this to be optional as well?

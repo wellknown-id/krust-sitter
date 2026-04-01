@@ -28,10 +28,7 @@ ParseResult {
                     column: 8,
                 },
             },
-            lookaheads: [
-                "if",
-                "source_file",
-            ],
+            lookaheads: [],
             reason: Error,
         },
         ParseError {
