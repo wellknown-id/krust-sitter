@@ -67,12 +67,7 @@ jobs:
         run: cargo test -p krust-sitter-example --target wasm32-unknown-unknown --locked --no-fail-fast
 
       - name: Verify package contents
-        run: |
-          cargo package -p krust-sitter-types --locked --allow-dirty --no-verify
-          cargo package -p krust-sitter-common --locked --allow-dirty --no-verify
-          cargo package -p krust-sitter-macro --locked --allow-dirty --no-verify
-          cargo package -p krust-sitter --locked --allow-dirty --no-verify
-          cargo package -p krust-sitter-tool --locked --allow-dirty --no-verify
+        run: cargo package --workspace --exclude krust-sitter-example --locked --allow-dirty --no-verify
 
   publish:
     name: Publish crates
