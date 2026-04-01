@@ -102,9 +102,26 @@ jobs:
           wait_for_crate() {
             local crate="$1"
             local version="$2"
+            local lower="${crate,,}"
+            local index_path
+
+            case "${#lower}" in
+              1)
+                index_path="1/${lower}"
+                ;;
+              2)
+                index_path="2/${lower}"
+                ;;
+              3)
+                index_path="3/${lower:0:1}/${lower}"
+                ;;
+              *)
+                index_path="${lower:0:2}/${lower:2:2}/${lower}"
+                ;;
+            esac
 
             for _ in $(seq 1 30); do
-              if curl --silent --show-error --fail "https://crates.io/api/v1/crates/${crate}/${version}" >/dev/null; then
+              if curl --silent --show-error --fail "https://index.crates.io/${index_path}" | grep -F "\"vers\":\"${version}\"" >/dev/null; then
                 return 0
               fi
               sleep 10
