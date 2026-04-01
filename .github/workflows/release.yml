@@ -102,6 +102,24 @@ jobs:
           wait_for_crate() {
             local crate="$1"
             local version="$2"
+            if crate_available "$crate" "$version"; then
+              return 0
+            fi
+
+            for _ in $(seq 1 30); do
+              sleep 10
+              if crate_available "$crate" "$version"; then
+                return 0
+              fi
+            done
+
+            echo "Timed out waiting for ${crate} ${version} to appear on crates.io" >&2
+            return 1
+          }
+
+          crate_available() {
+            local crate="$1"
+            local version="$2"
             local lower="${crate,,}"
             local index_path
 
@@ -120,18 +138,15 @@ jobs:
                 ;;
             esac
 
-            for _ in $(seq 1 30); do
-              if curl --silent --show-error --fail "https://index.crates.io/${index_path}" | grep -F "\"vers\":\"${version}\"" >/dev/null; then
-                return 0
-              fi
-              sleep 10
-            done
-
-            echo "Timed out waiting for ${crate} ${version} to appear on crates.io" >&2
-            return 1
+            curl --silent --show-error --fail "https://index.crates.io/${index_path}" | grep -F "\"vers\":\"${version}\"" >/dev/null
           }
 
           for crate in "${crates[@]}"; do
+            if crate_available "$crate" "$version"; then
+              echo "$crate $version is already available on crates.io; skipping publish"
+              continue
+            fi
+
             cargo publish -p "$crate" --locked
             wait_for_crate "$crate" "$version"
           done
