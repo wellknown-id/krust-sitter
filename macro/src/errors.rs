@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 use std::marker::PhantomData;
 
 /// An iterator that maps [`Result`]s to their [`Ok`] values

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 pub mod grammar {
     use krust_sitter::Rule;
     #[derive(PartialEq, Eq, Debug, Rule)]

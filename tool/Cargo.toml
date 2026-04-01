@@ -2,10 +2,11 @@
 name = "krust-sitter-tool"
 description = "Build and export Krust Sitter grammars from Rust source"
 readme = "../README.md"
-repository = "https://github.com/wellknown-id/krust-sitter"
 version.workspace = true
 authors.workspace = true
-license = "MIT"
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
 edition = "2024"
 keywords = ["parsing", "codegen"]
 categories = ["development-tools"]

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 //! Grammar related functions.
 use std::collections::HashSet;
 

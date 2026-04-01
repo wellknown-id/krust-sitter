@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 use log::trace;
 use std::{collections::HashSet, marker::PhantomData, ops::Range};
 

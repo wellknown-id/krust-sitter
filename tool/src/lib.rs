@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 // TODO: Switch on which version we are using specifically.
 const GENERATED_SEMANTIC_VERSION: Option<(u8, u8, u8)> = Some((0, 26, 0));
 

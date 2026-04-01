@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 //! TextMate grammar generation from the Grammar IR.
 //!
 //! This module converts a `Grammar` (the same IR used for Tree-Sitter generation)

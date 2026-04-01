@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 use syn::{DeriveInput, parse_macro_input};
 
 mod errors;

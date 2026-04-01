@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 use std::collections::{HashMap, HashSet};
 
 use crate::errors::IteratorExt as _;

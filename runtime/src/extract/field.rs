@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 use crate::error::ExtractError;
 
 use super::Result;

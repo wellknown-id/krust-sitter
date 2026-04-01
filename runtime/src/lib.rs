@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 pub mod __private;
 pub mod error;
 pub mod extract;

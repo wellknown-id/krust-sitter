@@ -2,11 +2,12 @@
 name = "krust-sitter-common"
 description = "Shared expansion and grammar logic for Krust Sitter"
 readme = "../README.md"
-repository = "https://github.com/wellknown-id/krust-sitter"
 version.workspace = true
 authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
 edition = "2024"
-license = "MIT"
 keywords = ["parsing", "codegen"]
 categories = ["development-tools"]
 

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 //! # DO NOT USE THIS MODULE!
 //!
 //! This module contains functions for use in the expanded macros produced by krust-sitter.

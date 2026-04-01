@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 #[allow(dead_code)]
 pub mod grammar {
     use krust_sitter::Rule;

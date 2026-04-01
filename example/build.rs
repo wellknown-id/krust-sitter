@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 fn main() {
     println!("cargo:rerun-if-changed=src");
     let examples = std::fs::read_dir("./src/").unwrap();

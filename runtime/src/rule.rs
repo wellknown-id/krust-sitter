@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 use tree_sitter::Node;
 
 use crate::{Extract, NodeParseResult, ParseResult, extract::ExtractContext};

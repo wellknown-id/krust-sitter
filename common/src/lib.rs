@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 use krust_sitter_types::grammar::RuleDef;
 use proc_macro2::Span;
 use quote::ToTokens;

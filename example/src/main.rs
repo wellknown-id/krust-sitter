@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 use krust_sitter::Language;
 use std::{fmt::Debug, io::Write};
 
