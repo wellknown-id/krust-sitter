@@ -9,7 +9,7 @@ use serde_json::{Value, json};
 /// Generate a complete `.tmLanguage.json` value from a Grammar IR.
 pub fn generate_textmate(grammar: &Grammar, scope_name: Option<&str>) -> Value {
     let lang_name = &grammar.name;
-    let scope = scope_name.unwrap_or_else(|| lang_name.as_str());
+    let scope = scope_name.unwrap_or(lang_name.as_str());
 
     let mut collector = TokenCollector::new(scope);
     // Collect comment patterns from extras.
@@ -561,7 +561,7 @@ pub fn generate_preview(
     scope_name: Option<&str>,
     lang_name: &str,
 ) -> PreviewFiles {
-    let scope = scope_name.unwrap_or_else(|| lang_name);
+    let scope = scope_name.unwrap_or(lang_name);
 
     let mut collector = TokenCollector::new(scope);
     collector.collect_extras(&grammar.extras);

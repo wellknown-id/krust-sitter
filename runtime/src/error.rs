@@ -1,5 +1,5 @@
 use log::trace;
-use std::{collections::HashSet, ops::Range};
+use std::{collections::HashSet, marker::PhantomData, ops::Range};
 
 use crate::{ExtractContext, Point, Position, extract::ExtractFieldIterator};
 
@@ -310,22 +310,25 @@ impl Iterator for ErrorLookahead<'_> {
 
 #[derive(Debug)]
 pub struct ExtractError<'a> {
-    inner: Vec<ExtractErrorInner<'a>>,
+    inner: Vec<ExtractErrorInner>,
+    marker: PhantomData<tree_sitter::Node<'a>>,
 }
 
 #[derive(Debug)]
-struct ExtractErrorInner<'a> {
+struct ExtractErrorInner {
     /// Span of the node which failed to extract.
     position: crate::Position,
     field_name: &'static str,
     struct_name: &'static str,
-    node: Option<tree_sitter::Node<'a>>,
     reason: ExtractErrorReason,
 }
 
 impl<'a> ExtractError<'a> {
     pub(crate) fn empty() -> Self {
-        Self { inner: vec![] }
+        Self {
+            inner: vec![],
+            marker: PhantomData,
+        }
     }
 
     pub(crate) fn prop(self) -> Result<(), Self> {
@@ -344,13 +347,12 @@ impl<'a> ExtractError<'a> {
     ) -> Self {
         Self {
             inner: vec![ExtractErrorInner {
-                // TODO: Provide this where possible.
-                node: None,
                 position,
                 field_name,
                 struct_name,
                 reason,
             }],
+            marker: PhantomData,
         }
     }
 
@@ -474,12 +476,14 @@ impl<'a> IntoIterator for ExtractError<'a> {
     fn into_iter(self) -> Self::IntoIter {
         ErrorIntoIter {
             iter: self.inner.into_iter(),
+            marker: PhantomData,
         }
     }
 }
 
 pub struct ErrorIntoIter<'a> {
-    iter: std::vec::IntoIter<ExtractErrorInner<'a>>,
+    iter: std::vec::IntoIter<ExtractErrorInner>,
+    marker: PhantomData<tree_sitter::Node<'a>>,
 }
 
 impl<'a> Iterator for ErrorIntoIter<'a> {
@@ -487,6 +491,7 @@ impl<'a> Iterator for ErrorIntoIter<'a> {
     fn next(&mut self) -> Option<Self::Item> {
         Some(ExtractError {
             inner: vec![self.iter.next()?],
+            marker: PhantomData,
         })
     }
 }

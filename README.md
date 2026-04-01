@@ -4,6 +4,23 @@
 
 Repository: <https://github.com/wellknown-id/krust-sitter>
 
+## Development hooks
+
+This repository uses [`lefthook`](https://github.com/evilmartians/lefthook) for local git hooks.
+
+Install it however you prefer, then enable the hooks:
+
+```sh
+cargo install --locked lefthook
+lefthook install
+```
+
+The pre-commit hook runs:
+
+```sh
+cargo clippy --workspace --all-targets -- -D warnings
+```
+
 Krust Sitter makes it easy to create efficient parsers in Rust by leveraging the [Tree Sitter](https://tree-sitter.github.io/tree-sitter/) parser generator. With Krust Sitter, you can define your entire grammar with annotations on idiomatic Rust code, and let macros generate the parser and type-safe bindings for you!
 
 ## Installation

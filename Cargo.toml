@@ -16,3 +16,6 @@ authors = [
 [workspace.dependencies]
 tree-sitter = "0.26.8"
 tree-sitter-generate = { version = "0.26.8", default-features = false, features = ["load"] }
+
+[workspace.metadata.lefthook]
+version = "1.12.3"

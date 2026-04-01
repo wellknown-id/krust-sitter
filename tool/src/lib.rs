@@ -125,7 +125,7 @@ fn generate_parser(grammar: &serde_json::Value, out_dir: Option<&Path>) -> Resul
     } else {
         tempfile.path()
     };
-    let _sysroot_dir = write_grammar_and_c_to_dir(&grammar_name, grammar, &grammar_c, dir);
+    let sysroot_dir = write_grammar_and_c_to_dir(&grammar_name, grammar, &grammar_c, dir);
     // Check if we have an additional output directory.
     if let Ok(output) = std::env::var("RUST_SITTER_PARSER_OUTPUT") {
         let output: &Path = output.as_ref();
@@ -134,6 +134,9 @@ fn generate_parser(grammar: &serde_json::Value, out_dir: Option<&Path>) -> Resul
 
     let mut c_config = cc::Build::new();
     c_config.std("c11").include(dir);
+    if let Some(sysroot_dir) = &sysroot_dir {
+        c_config.include(sysroot_dir);
+    }
     c_config
         .flag_if_supported("-Wno-unused-label")
         .flag_if_supported("-Wno-unused-parameter")
@@ -151,7 +154,7 @@ fn write_grammar_and_c_to_dir(
     grammar: &serde_json::Value,
     grammar_c: &str,
     dir: &Path,
-) -> PathBuf {
+) -> Option<PathBuf> {
     let grammar_file = dir.join("parser.c");
     let mut f = std::fs::File::create(grammar_file).unwrap();
 
@@ -174,35 +177,35 @@ fn write_grammar_and_c_to_dir(
         .unwrap();
     drop(parser_file);
 
-    let sysroot_dir = dir.join("sysroot");
-    // if std::env::var("TARGET").unwrap().starts_with("wasm32") {
-    //     std::fs::create_dir(&sysroot_dir).unwrap();
-    //     let mut stdint = std::fs::File::create(sysroot_dir.join("stdint.h")).unwrap();
-    //     stdint
-    //         .write_all(include_bytes!("wasm-sysroot/stdint.h"))
-    //         .unwrap();
-    //     drop(stdint);
+    if std::env::var("TARGET").is_ok_and(|target| target.starts_with("wasm32")) {
+        let sysroot_dir = dir.join("sysroot");
+        std::fs::create_dir_all(&sysroot_dir).unwrap();
 
-    //     let mut stdlib = std::fs::File::create(sysroot_dir.join("stdlib.h")).unwrap();
-    //     stdlib
-    //         .write_all(include_bytes!("wasm-sysroot/stdlib.h"))
-    //         .unwrap();
-    //     drop(stdlib);
+        let headers = [
+            (
+                "stdint.h",
+                include_bytes!("wasm-sysroot/stdint.h").as_slice(),
+            ),
+            (
+                "stdlib.h",
+                include_bytes!("wasm-sysroot/stdlib.h").as_slice(),
+            ),
+            ("stdio.h", include_bytes!("wasm-sysroot/stdio.h").as_slice()),
+            (
+                "stdbool.h",
+                include_bytes!("wasm-sysroot/stdbool.h").as_slice(),
+            ),
+        ];
 
-    //     let mut stdio = std::fs::File::create(sysroot_dir.join("stdio.h")).unwrap();
-    //     stdio
-    //         .write_all(include_bytes!("wasm-sysroot/stdio.h"))
-    //         .unwrap();
-    //     drop(stdio);
+        for (name, contents) in headers {
+            let mut file = std::fs::File::create(sysroot_dir.join(name)).unwrap();
+            file.write_all(contents).unwrap();
+        }
 
-    //     let mut stdbool = std::fs::File::create(sysroot_dir.join("stdbool.h")).unwrap();
-    //     stdbool
-    //         .write_all(include_bytes!("wasm-sysroot/stdbool.h"))
-    //         .unwrap();
-    //     drop(stdbool);
-    // }
-
-    sysroot_dir
+        Some(sysroot_dir)
+    } else {
+        None
+    }
 }
 
 #[cfg(test)]

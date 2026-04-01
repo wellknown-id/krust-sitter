@@ -15,6 +15,7 @@ pub mod grammar {
 
     #[derive(Debug, Rule)]
     #[leaf(pattern(r"[a-z_]+"))]
+    #[allow(dead_code)]
     pub struct Ident;
 }
 
