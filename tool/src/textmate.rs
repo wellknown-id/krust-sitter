@@ -332,10 +332,14 @@ impl TokenCollector {
         if !strings.is_empty() {
             let mut string_patterns: Vec<Value> = Vec::new();
             for t in &strings {
-                string_patterns.push(json!({
-                    "match": t.pattern,
-                    "name": format!("string.quoted.{scope}")
-                }));
+                string_patterns.push(
+                    quoted_string_pattern(&t.pattern, scope).unwrap_or_else(|| {
+                        json!({
+                            "match": t.pattern,
+                            "name": format!("string.quoted.{scope}")
+                        })
+                    }),
+                );
             }
             repository.insert(
                 "strings".to_string(),
@@ -631,6 +635,47 @@ fn js_regex_escape(s: &str) -> String {
     s.replace('/', "\\/")
 }
 
+fn quoted_string_pattern(pattern: &str, scope: &str) -> Option<Value> {
+    let quote = match pattern.chars().next()? {
+        quote @ ('"' | '\'') => quote,
+        _ => return None,
+    };
+    if !pattern.ends_with(quote) {
+        return None;
+    }
+
+    let inner = &pattern[quote.len_utf8()..pattern.len() - quote.len_utf8()];
+    let repeated_content = format!(r#"([^{quote}\\]|\\.)"#);
+    if !matches!(
+        inner,
+        body if body == format!("{repeated_content}*") || body == format!("{repeated_content}+")
+    ) {
+        return None;
+    }
+
+    let quoted_kind = match quote {
+        '"' => "double",
+        '\'' => "single",
+        _ => unreachable!(),
+    };
+
+    Some(json!({
+        "begin": quote.to_string(),
+        "end": quote.to_string(),
+        "beginCaptures": {
+            "0": { "name": format!("punctuation.definition.string.begin.{scope}") }
+        },
+        "endCaptures": {
+            "0": { "name": format!("punctuation.definition.string.end.{scope}") }
+        },
+        "name": format!("string.quoted.{quoted_kind}.{scope}"),
+        "patterns": [{
+            "match": r"\\.",
+            "name": format!("constant.character.escape.{scope}")
+        }]
+    }))
+}
+
 /// Unwrap precedence/field wrappers to reach an inner SEQ.
 fn unwrap_to_seq(rule_def: &RuleDef) -> Option<&[RuleDef]> {
     match rule_def {
@@ -891,5 +936,29 @@ mod tests {
             "TextMate output should contain block comment scope: {json_str}"
         );
         insta::assert_snapshot!(json_str);
+    }
+
+    #[test]
+    fn textmate_string_patterns_use_begin_end_rules() {
+        let m = if let syn::Item::Mod(m) = parse_quote! {
+            mod grammar {
+                #[derive(krust_sitter::Rule)]
+                #[language]
+                pub enum Expression {
+                    String(
+                        #[leaf(pattern(r#""([^"\\]|\\.)*""#))]
+                        String
+                    ),
+                }
+            }
+        } {
+            m
+        } else {
+            panic!()
+        };
+
+        let grammar = grammar_from_mod(m);
+        let textmate = generate_textmate(&grammar, Some("karu"));
+        insta::assert_snapshot!(serde_json::to_string_pretty(&textmate).unwrap());
     }
 }
