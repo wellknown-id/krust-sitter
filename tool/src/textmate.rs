@@ -645,11 +645,10 @@ fn quoted_string_pattern(pattern: &str, scope: &str) -> Option<Value> {
     }
 
     let inner = &pattern[quote.len_utf8()..pattern.len() - quote.len_utf8()];
-    let repeated_content = format!(r#"([^{quote}\\]|\\.)"#);
-    if !matches!(
-        inner,
-        body if body == format!("{repeated_content}*") || body == format!("{repeated_content}+")
-    ) {
+    let char_pattern = format!(r#"([^{quote}\\]|\\.)"#);
+    let zero_or_more_chars = format!("{char_pattern}*");
+    let one_or_more_chars = format!("{char_pattern}+");
+    if inner != zero_or_more_chars && inner != one_or_more_chars {
         return None;
     }
 
