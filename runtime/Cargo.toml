@@ -16,8 +16,8 @@ path = "src/lib.rs"
 
 [dependencies]
 tree-sitter.workspace = true
-krust-sitter-macro = { version = "0.5.0", path = "../macro" }
-krust-sitter-types = { version = "0.5.0", path = "../types" }
+krust-sitter-macro = { version = "0.5.1", path = "../macro" }
+krust-sitter-types = { version = "0.5.1", path = "../types" }
 log = "0.4"
 # This one could be optional.
 serde_json = "1"

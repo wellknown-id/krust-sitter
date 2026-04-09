@@ -19,8 +19,8 @@ path = "src/lib.rs"
 syn = { version = "2", features = [ "full", "extra-traits" ] }
 quote = "1"
 proc-macro2 = "1"
-krust-sitter-common = { version = "0.5.0", path = "../common" }
-krust-sitter-types = { version = "0.5.0", path = "../types" }
+krust-sitter-common = { version = "0.5.1", path = "../common" }
+krust-sitter-types = { version = "0.5.1", path = "../types" }
 
 [dev-dependencies]
 insta = "1"
