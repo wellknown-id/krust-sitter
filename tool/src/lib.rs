@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 
 // TODO: Switch on which version we are using specifically.
-const GENERATED_SEMANTIC_VERSION: Option<(u8, u8, u8)> = Some((0, 26, 0));
+pub const GENERATED_SEMANTIC_VERSION: Option<(u8, u8, u8)> = Some((0, 26, 0));
 
 use std::io::Write;
 use std::path::{Path, PathBuf};
