@@ -1,0 +1,41 @@
+---
+source: tool/src/textmate.rs
+expression: serde_json::to_string_pretty(&textmate).unwrap()
+---
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Expression",
+  "scopeName": "source.karu",
+  "patterns": [
+    {
+      "include": "#strings"
+    }
+  ],
+  "repository": {
+    "strings": {
+      "patterns": [
+        {
+          "begin": "\"",
+          "end": "\"",
+          "beginCaptures": {
+            "0": {
+              "name": "punctuation.definition.string.begin.karu"
+            }
+          },
+          "endCaptures": {
+            "0": {
+              "name": "punctuation.definition.string.end.karu"
+            }
+          },
+          "name": "string.quoted.double.karu",
+          "patterns": [
+            {
+              "match": "\\\\.",
+              "name": "constant.character.escape.karu"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
