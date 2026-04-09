@@ -11,12 +11,9 @@
 /// here; the compilation step is already exercised by the `example` crate's
 /// build script.
 use rust_sitter_common::expansion::generate_grammar as expand_grammar;
+use rust_sitter_tool::GENERATED_SEMANTIC_VERSION;
 use syn::{Item, ItemMod, parse_quote};
 use tree_sitter_generate::generate_parser_for_grammar;
-
-/// Tree-sitter ABI version targeted by this workspace.
-const GENERATED_SEMANTIC_VERSION: Option<(u8, u8, u8)> = Some((0, 26, 0));
-
 /// Convenience wrapper: turn an `ItemMod` into a validated grammar JSON value
 /// and confirm that `generate_parser_for_grammar` accepts it.
 fn check_grammar(m: ItemMod) {
