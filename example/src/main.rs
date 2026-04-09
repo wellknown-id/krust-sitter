@@ -44,6 +44,17 @@ fn main() {
     } else {
         panic!("Unexpected inputs")
     };
+    let process: fn(&str) = match grammar {
+        "Expression" => process_input::<arithmetic::grammar::Expression>,
+        "Repetition" => process_input::<repetitions::grammar::Repetitions>,
+        "Optional" => process_input::<optionals::grammar::Language>,
+        "Word" => process_input::<words::grammar::Words>,
+        other => panic!(
+            "Unknown grammar: '{}'. Valid options are: Expression, Repetition, Optional, Word",
+            other
+        ),
+    };
+
     let stdin = std::io::stdin();
 
     loop {
@@ -57,16 +68,7 @@ fn main() {
             break;
         }
 
-        match grammar {
-            "Expression" => process_input::<arithmetic::grammar::Expression>(input),
-            "Repetition" => process_input::<repetitions::grammar::Repetitions>(input),
-            "Optional" => process_input::<optionals::grammar::Language>(input),
-            "Word" => process_input::<words::grammar::Words>(input),
-            other => panic!(
-                "Unknown grammar: '{}'. Valid options are: Expression, Repetition, Optional, Word",
-                other
-            ),
-        }
+        process(input);
     }
 }
 
