@@ -17,9 +17,15 @@ use tree_sitter_generate::generate_parser_for_grammar;
 /// Convenience wrapper: turn an `ItemMod` into a validated grammar JSON value
 /// and confirm that `generate_parser_for_grammar` accepts it.
 fn check_grammar(m: ItemMod) {
-    let (_, items) = m.content.unwrap();
-    let grammar = serde_json::to_value(expand_grammar(items).unwrap().unwrap()).unwrap();
-    generate_parser_for_grammar(&grammar.to_string(), GENERATED_SEMANTIC_VERSION).unwrap();
+    let (_, items) = m.content.expect("expected inline grammar module");
+    let grammar = serde_json::to_value(
+        expand_grammar(items)
+            .expect("failed to expand grammar")
+            .expect("grammar expansion returned no grammar"),
+    )
+    .expect("failed to serialize generated grammar to JSON");
+    generate_parser_for_grammar(&grammar.to_string(), GENERATED_SEMANTIC_VERSION)
+        .expect("generated grammar JSON was rejected by tree-sitter");
 }
 
 #[test]
