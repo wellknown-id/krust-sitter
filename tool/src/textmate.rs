@@ -644,11 +644,15 @@ fn quoted_string_pattern(pattern: &str, scope: &str) -> Option<Value> {
         return None;
     }
 
-    let inner = &pattern[quote.len_utf8()..pattern.len() - quote.len_utf8()];
+    let quote_len = quote.len_utf8();
+    if pattern.len() < 2 * quote_len {
+        return None;
+    }
+
+    let inner = &pattern[quote_len..pattern.len() - quote_len];
     let char_pattern = format!(r#"([^{quote}\\]|\\.)"#);
     let zero_or_more_chars = format!("{char_pattern}*");
-    let one_or_more_chars = format!("{char_pattern}+");
-    if inner != zero_or_more_chars && inner != one_or_more_chars {
+    if inner != zero_or_more_chars {
         return None;
     }
 
@@ -959,5 +963,16 @@ mod tests {
         let grammar = grammar_from_mod(m);
         let textmate = generate_textmate(&grammar, Some("karu"));
         insta::assert_snapshot!(serde_json::to_string_pretty(&textmate).unwrap());
+    }
+
+    #[test]
+    fn quoted_string_pattern_rejects_too_short_patterns() {
+        assert_eq!(quoted_string_pattern("\"", "karu"), None);
+        assert_eq!(quoted_string_pattern("'", "karu"), None);
+    }
+
+    #[test]
+    fn quoted_string_pattern_rejects_one_or_more_inner_form() {
+        assert_eq!(quoted_string_pattern(r#""([^"\\]|\\.)+""#, "karu"), None);
     }
 }
