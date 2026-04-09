@@ -332,14 +332,14 @@ impl TokenCollector {
         if !strings.is_empty() {
             let mut string_patterns: Vec<Value> = Vec::new();
             for t in &strings {
-                string_patterns.push(
-                    quoted_string_pattern(&t.pattern, scope).unwrap_or_else(|| {
+                string_patterns.push(quoted_string_pattern(&t.pattern, scope).unwrap_or_else(
+                    || {
                         json!({
                             "match": t.pattern,
                             "name": format!("string.quoted.{scope}")
                         })
-                    }),
-                );
+                    },
+                ));
             }
             repository.insert(
                 "strings".to_string(),
