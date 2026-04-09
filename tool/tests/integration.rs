@@ -371,7 +371,7 @@ fn struct_optional() {
 }
 
 #[test]
-fn enum_with_unamed_vector() {
+fn enum_with_unnamed_vector() {
     let m: Item = parse_quote! {
         mod grammar {
             #[derive(rust_sitter::Rule)]
