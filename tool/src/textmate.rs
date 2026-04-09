@@ -6,7 +6,7 @@
 //! into a `.tmLanguage.json` value suitable for legacy syntax highlighters.
 
 use krust_sitter_types::grammar::{Grammar, RuleDef};
-use serde_json::{Value, json};
+use serde_json::{json, Value};
 
 /// Generate a complete `.tmLanguage.json` value from a Grammar IR.
 pub fn generate_textmate(grammar: &Grammar, scope_name: Option<&str>) -> Value {
@@ -707,7 +707,7 @@ fn extract_string_value(rule_def: &RuleDef) -> Option<String> {
 mod tests {
     use super::*;
     use krust_sitter_common::expansion::generate_grammar;
-    use syn::{ItemMod, parse_quote};
+    use syn::{parse_quote, ItemMod};
 
     fn grammar_from_mod(m: ItemMod) -> Grammar {
         let (_, items) = m.content.unwrap();
