@@ -1,5 +1,6 @@
 ---
 source: tool/src/lib.rs
+assertion_line: 436
 expression: grammar
 ---
 {"name":"Expression","word":null,"rules":{"source_file":{"type":"CHOICE","members":[{"type":"SYMBOL","name":"Expression_Number"}]},"Expression_Number":{"type":"SEQ","members":[{"type":"FIELD","name":"0","content":{"type":"PATTERN","value":"\\d+"}}]},"Expression":{"type":"CHOICE","members":[{"type":"SYMBOL","name":"Expression_Number"}]}},"extras":[{"type":"PATTERN","value":"\\s"}]}

@@ -1,5 +1,6 @@
 ---
 source: tool/src/lib.rs
+assertion_line: 589
 expression: grammar
 ---
 {"name":"Language","word":null,"rules":{"source_file":{"type":"SEQ","members":[{"type":"CHOICE","members":[{"type":"BLANK"},{"type":"FIELD","name":"v","content":{"type":"PATTERN","value":"\\d+"}}]},{"type":"FIELD","name":"space","content":{"type":"PATTERN","value":" "}},{"type":"CHOICE","members":[{"type":"BLANK"},{"type":"FIELD","name":"t","content":{"type":"SYMBOL","name":"Number"}}]}]},"Language":{"type":"SEQ","members":[{"type":"CHOICE","members":[{"type":"BLANK"},{"type":"FIELD","name":"v","content":{"type":"PATTERN","value":"\\d+"}}]},{"type":"FIELD","name":"space","content":{"type":"PATTERN","value":" "}},{"type":"CHOICE","members":[{"type":"BLANK"},{"type":"FIELD","name":"t","content":{"type":"SYMBOL","name":"Number"}}]}]},"Number":{"type":"SEQ","members":[{"type":"FIELD","name":"v","content":{"type":"PATTERN","value":"\\d+"}}]}},"extras":[]}

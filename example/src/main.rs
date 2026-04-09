@@ -1,9 +1,11 @@
-use rust_sitter::Language;
+// SPDX-License-Identifier: MIT
+
+use krust_sitter::Language;
 use std::{fmt::Debug, io::Write};
 
 use codemap::CodeMap;
 use codemap_diagnostic::{ColorConfig, Diagnostic, Emitter, Level, SpanLabel, SpanStyle};
-use rust_sitter::error::ParseError;
+use krust_sitter::error::ParseError;
 
 mod arithmetic;
 mod optionals;

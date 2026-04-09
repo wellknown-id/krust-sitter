@@ -1,12 +1,13 @@
 [package]
-name = "rust-sitter-common"
-description = "Shared logic for the Rust Sitter macro and tool"
+name = "krust-sitter-common"
+description = "Shared expansion and grammar logic for Krust Sitter"
 readme = "../README.md"
-repository = "https://github.com/hydro-project/rust-sitter"
 version.workspace = true
 authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
 edition = "2024"
-license = "MIT"
 keywords = ["parsing", "codegen"]
 categories = ["development-tools"]
 
@@ -14,7 +15,7 @@ categories = ["development-tools"]
 path = "src/lib.rs"
 
 [dependencies]
-rust-sitter-types = { path = "../types" }
+krust-sitter-types = { version = "0.5.0", path = "../types" }
 syn = { version = "2", features = [ "full", "extra-traits" ] }
 proc-macro2 = "1"
 quote = "1"

@@ -1,6 +1,8 @@
+// SPDX-License-Identifier: MIT
+
+use krust_sitter_types::grammar::RuleDef;
 use proc_macro2::Span;
 use quote::ToTokens;
-use rust_sitter_types::grammar::RuleDef;
 use std::collections::HashSet;
 use syn::{
     parse::{Parse, ParseStream},
@@ -25,7 +27,7 @@ impl LanguageExpr {
     pub fn from_attr(a: &Attribute) -> Result<Self> {
         let path = a.path().require_ident()?.clone();
         if path != "language" {
-            panic!("Expected language in LanguageExpr, this is a bug in rust-sitter");
+            panic!("Expected language in LanguageExpr, this is a bug in krust-sitter");
         }
         let mut s = Self { path, name: None };
         if matches!(&a.meta, Meta::List(_)) {
@@ -222,7 +224,7 @@ pub fn sitter_attr_matches(attr: &Attribute, name: &str) -> bool {
         path.segments[0].ident == name
     } else if path.segments.len() == 2 {
         // This is no longer possible, we can clean this up.
-        path.segments[0].ident == "rust_sitter" && path.segments[1].ident == name
+        path.segments[0].ident == "krust_sitter" && path.segments[1].ident == name
     } else {
         false
     }
@@ -303,9 +305,9 @@ pub fn wrap_leaf_type(ty: &Type, skip_over: &HashSet<&str>) -> Type {
                 panic!("Expected angle bracketed path");
             }
         } else {
-            parse_quote!(::rust_sitter::extract::WithLeaf<#ty, _>)
+            parse_quote!(::krust_sitter::extract::WithLeaf<#ty, _>)
         }
     } else {
-        parse_quote!(::rust_sitter::extract::WithLeaf<#ty, _>)
+        parse_quote!(::krust_sitter::extract::WithLeaf<#ty, _>)
     }
 }

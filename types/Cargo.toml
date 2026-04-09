@@ -1,8 +1,15 @@
 [package]
-name = "rust-sitter-types"
-edition = "2024"
+name = "krust-sitter-types"
+description = "Grammar IR types for Krust Sitter"
+readme = "../README.md"
 version.workspace = true
 authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+edition = "2024"
+keywords = ["parsing", "codegen"]
+categories = ["development-tools"]
 
 [dependencies]
 serde = { version = "1", features = ["derive"] }

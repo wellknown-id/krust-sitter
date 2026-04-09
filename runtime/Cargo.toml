@@ -1,12 +1,13 @@
 [package]
-name = "rust-sitter"
-description = "A package for defining tree-sitter grammars alongside Rust logic"
+name = "krust-sitter"
+description = "Define Tree-sitter grammars directly in Rust"
 readme = "../README.md"
-repository = "https://github.com/hydro-project/rust-sitter"
 version.workspace = true
 authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
 edition = "2024"
-license = "MIT"
 keywords = ["parsing", "codegen"]
 categories = ["development-tools"]
 
@@ -15,8 +16,8 @@ path = "src/lib.rs"
 
 [dependencies]
 tree-sitter.workspace = true
-rust-sitter-macro = { path = "../macro" }
-rust-sitter-types = { path = "../types" }
+krust-sitter-macro = { version = "0.5.0", path = "../macro" }
+krust-sitter-types = { version = "0.5.0", path = "../types" }
 log = "0.4"
 # This one could be optional.
 serde_json = "1"

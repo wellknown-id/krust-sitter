@@ -1,11 +1,12 @@
 [package]
-name = "rust-sitter-tool"
-description = "The external tool for Rust Sitter that extracts grammars from Rust definitions"
+name = "krust-sitter-tool"
+description = "Build and export Krust Sitter grammars from Rust source"
 readme = "../README.md"
-repository = "https://github.com/hydro-project/rust-sitter"
 version.workspace = true
 authors.workspace = true
-license = "MIT"
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
 edition = "2024"
 keywords = ["parsing", "codegen"]
 categories = ["development-tools"]
@@ -15,8 +16,8 @@ syn = { version = "2", features = ["full", "extra-traits"] }
 syn-inline-mod = "0.6"
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["preserve_order"] }
-rust-sitter-common = { path = "../common" }
-rust-sitter-types = { path = "../types" }
+krust-sitter-common = { version = "0.5.0", path = "../common" }
+krust-sitter-types = { version = "0.5.0", path = "../types" }
 
 tempfile = "3"
 tree-sitter.workspace = true

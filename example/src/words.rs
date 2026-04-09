@@ -1,5 +1,7 @@
+// SPDX-License-Identifier: MIT
+
 pub mod grammar {
-    use rust_sitter::Rule;
+    use krust_sitter::Rule;
 
     #[derive(Debug, Rule)]
     #[language]
@@ -15,13 +17,14 @@ pub mod grammar {
 
     #[derive(Debug, Rule)]
     #[leaf(pattern(r"[a-z_]+"))]
+    #[allow(dead_code)]
     pub struct Ident;
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rust_sitter::Language;
+    use krust_sitter::Language;
 
     #[test]
     fn words_grammar() {

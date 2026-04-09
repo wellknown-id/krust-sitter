@@ -1,8 +1,10 @@
+// SPDX-License-Identifier: MIT
+
 pub mod __private;
 pub mod error;
 pub mod extract;
 pub mod rule;
-pub use rust_sitter_types::grammar;
+pub use krust_sitter_types::grammar;
 
 pub use rule::Language;
 
@@ -11,7 +13,7 @@ use serde::{Deserialize, Serialize};
 
 use std::ops::Deref;
 
-pub use rust_sitter_macro::*;
+pub use krust_sitter_macro::*;
 pub use tree_sitter;
 
 use tree_sitter::Node;

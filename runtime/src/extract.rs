@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 use super::Node;
 pub mod field;
 pub use crate::error::ExtractError;

@@ -1,5 +1,6 @@
 ---
 source: example/src/words.rs
+assertion_line: 29
 expression: "grammar::Words::parse(\"hello\")"
 ---
 ParseResult {
@@ -28,10 +29,7 @@ ParseResult {
                     column: 6,
                 },
             },
-            lookaheads: [
-                "if",
-                "source_file",
-            ],
+            lookaheads: [],
             reason: Error,
         },
         ParseError {

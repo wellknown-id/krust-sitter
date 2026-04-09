@@ -1,5 +1,7 @@
+// SPDX-License-Identifier: MIT
+
 pub mod grammar {
-    use rust_sitter::Rule;
+    use krust_sitter::Rule;
     #[derive(PartialEq, Eq, Debug, Rule)]
     #[language]
     #[extras(
@@ -110,7 +112,7 @@ pub mod grammar {
 mod tests {
     use super::*;
     use grammar::Expression;
-    use rust_sitter::Language;
+    use krust_sitter::Language;
 
     #[wasm_bindgen_test::wasm_bindgen_test]
     #[test]
