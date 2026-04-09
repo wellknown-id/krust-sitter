@@ -12,7 +12,7 @@
 /// build script.
 use krust_sitter_common::expansion::generate_grammar as expand_grammar;
 use krust_sitter_tool::GENERATED_SEMANTIC_VERSION;
-use syn::{parse_quote, Item, ItemMod};
+use syn::{Item, ItemMod, parse_quote};
 use tree_sitter_generate::generate_parser_for_grammar;
 
 /// Convenience wrapper: turn an `ItemMod` into a validated grammar JSON value

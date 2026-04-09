@@ -212,7 +212,7 @@ fn write_grammar_and_c_to_dir(
 
 #[cfg(test)]
 mod tests {
-    use syn::{parse_quote, ItemMod};
+    use syn::{ItemMod, parse_quote};
 
     use super::GENERATED_SEMANTIC_VERSION;
     // use krust_sitter_common::expansion::generate_grammar;
