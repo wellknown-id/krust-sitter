@@ -13,7 +13,7 @@ pub fn generate_textmate(grammar: &Grammar, scope_name: Option<&str>) -> Value {
     let lang_name = &grammar.name;
     let scope = scope_name.unwrap_or(lang_name.as_str());
 
-    let mut collector = TokenCollector::new(scope);
+    let mut collector = TokenCollector::new(scope, grammar_word_allows_hyphen(grammar));
     // Collect comment patterns from extras.
     collector.collect_extras(&grammar.extras);
     // Walk all rules to collect tokens.
@@ -67,15 +67,17 @@ struct TokenCollector {
     tokens: Vec<CollectedToken>,
     begin_end_pairs: Vec<BeginEndPair>,
     comment_patterns: Vec<CommentPattern>,
+    word_allows_hyphen: bool,
     scope: String,
 }
 
 impl TokenCollector {
-    fn new(scope: &str) -> Self {
+    fn new(scope: &str, word_allows_hyphen: bool) -> Self {
         Self {
             tokens: Vec::new(),
             begin_end_pairs: Vec::new(),
             comment_patterns: Vec::new(),
+            word_allows_hyphen,
             scope: scope.to_string(),
         }
     }
@@ -270,7 +272,10 @@ impl TokenCollector {
                 "keywords".to_string(),
                 json!({
                     "patterns": [{
-                        "match": format!("\\b(?:{kw_pattern})\\b"),
+                        "match": keyword_match_pattern(
+                            &kw_pattern,
+                            self.word_allows_hyphen,
+                        ),
                         "name": format!("keyword.control.{scope}")
                     }]
                 }),
@@ -452,7 +457,7 @@ impl TokenCollector {
             ));
         }
 
-        // Keywords (word-bounded, same as TextMate)
+        // Keywords (word-bounded, matching the TextMate grammar)
         let keywords: Vec<&CollectedToken> = self
             .tokens
             .iter()
@@ -465,7 +470,11 @@ impl TokenCollector {
                 .collect::<Vec<_>>()
                 .join("|");
             js.push_str(&format!(
-                "    {{ regex: /(?<![a-zA-Z0-9_-])(?:{kw_pattern})(?![a-zA-Z0-9_-])/g, cls: '{lang_name}-keyword' }},\n"
+                "    {{ regex: /{}/g, cls: '{lang_name}-keyword' }},\n",
+                keyword_match_pattern(
+                    &kw_pattern,
+                    self.word_allows_hyphen,
+                )
             ));
         }
 
@@ -569,7 +578,7 @@ pub fn generate_preview(
 ) -> PreviewFiles {
     let scope = scope_name.unwrap_or(lang_name);
 
-    let mut collector = TokenCollector::new(scope);
+    let mut collector = TokenCollector::new(scope, grammar_word_allows_hyphen(grammar));
     collector.collect_extras(&grammar.extras);
     for (rule_name, rule_def) in &grammar.rules {
         collector.collect_rule(rule_name, rule_def);
@@ -582,6 +591,111 @@ pub fn generate_preview(
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
+
+fn grammar_word_allows_hyphen(grammar: &Grammar) -> bool {
+    grammar
+        .word
+        .as_ref()
+        .and_then(|word| grammar.rules.get(word))
+        .is_some_and(rule_allows_hyphen)
+}
+
+fn rule_allows_hyphen(rule_def: &RuleDef) -> bool {
+    match rule_def {
+        RuleDef::STRING { value } => value.contains('-'),
+        RuleDef::PATTERN { value, .. } => pattern_allows_hyphen(value),
+        RuleDef::ALIAS { content, .. }
+        | RuleDef::FIELD { content, .. }
+        | RuleDef::TOKEN { content }
+        | RuleDef::IMMEDIATE_TOKEN { content }
+        | RuleDef::PREC { content, .. }
+        | RuleDef::PREC_LEFT { content, .. }
+        | RuleDef::PREC_RIGHT { content, .. }
+        | RuleDef::PREC_DYNAMIC { content, .. }
+        | RuleDef::REPEAT { content }
+        | RuleDef::REPEAT1 { content }
+        | RuleDef::RESERVED { content, .. } => rule_allows_hyphen(content),
+        RuleDef::CHOICE { members } | RuleDef::SEQ { members } => {
+            members.iter().any(rule_allows_hyphen)
+        }
+        RuleDef::SYMBOL { .. } | RuleDef::BLANK => false,
+    }
+}
+
+fn pattern_allows_hyphen(pattern: &str) -> bool {
+    let chars: Vec<char> = pattern.chars().collect();
+    let mut index = 0;
+    let mut in_class = false;
+    let mut class_len = 0;
+    let mut escaped = false;
+
+    while index < chars.len() {
+        let ch = chars[index];
+
+        if escaped {
+            if ch == '-' {
+                return true;
+            }
+            escaped = false;
+            if in_class {
+                class_len += 1;
+            }
+            index += 1;
+            continue;
+        }
+
+        if ch == '\\' {
+            escaped = true;
+            index += 1;
+            continue;
+        }
+
+        if in_class {
+            if ch == ']' {
+                in_class = false;
+                class_len = 0;
+                index += 1;
+                continue;
+            }
+
+            if ch == '^' && class_len == 0 {
+                index += 1;
+                continue;
+            }
+
+            if ch == '-' && (class_len == 0 || chars.get(index + 1) == Some(&']')) {
+                return true;
+            }
+
+            class_len += 1;
+            index += 1;
+            continue;
+        }
+
+        if ch == '[' {
+            in_class = true;
+            class_len = 0;
+            index += 1;
+            continue;
+        }
+
+        if ch == '-' {
+            return true;
+        }
+
+        index += 1;
+    }
+
+    false
+}
+
+fn keyword_match_pattern(kw_pattern: &str, word_allows_hyphen: bool) -> String {
+    if word_allows_hyphen {
+        format!(r"(?<![\w-])(?:{kw_pattern})(?![\w-])")
+    } else {
+        format!(r"\b(?:{kw_pattern})\b")
+    }
+}
 
 /// Categorise a string literal token.
 fn categorise_string(value: &str) -> TokenCategory {
@@ -963,6 +1077,90 @@ mod tests {
         let grammar = grammar_from_mod(m);
         let textmate = generate_textmate(&grammar, Some("karu"));
         insta::assert_snapshot!(serde_json::to_string_pretty(&textmate).unwrap());
+    }
+
+    #[test]
+    fn textmate_keywords_allow_kebab_case_words_when_declared() {
+        let m = if let syn::Item::Mod(m) = parse_quote! {
+            mod grammar {
+                #[derive(krust_sitter::Rule)]
+                #[language]
+                #[word(Identifier)]
+                pub struct Program(pub Item);
+
+                #[derive(krust_sitter::Rule)]
+                pub struct Item {
+                    #[leaf("in")]
+                    pub _in: (),
+                    pub ident: Identifier,
+                }
+
+                #[derive(krust_sitter::Rule)]
+                #[leaf(pattern(r"[a-z][a-z0-9-]*"))]
+                pub struct Identifier;
+            }
+        } {
+            m
+        } else {
+            panic!()
+        };
+
+        let grammar = grammar_from_mod(m);
+        let textmate = generate_textmate(&grammar, None);
+        let preview = generate_preview(&grammar, None, &grammar.name);
+
+        assert_eq!(
+            textmate["repository"]["keywords"]["patterns"][0]["match"],
+            r"(?<![\w-])(?:in)(?![\w-])"
+        );
+        assert!(
+            preview
+                .js
+                .contains(r"regex: /(?<![\w-])(?:in)(?![\w-])/g"),
+            "preview JS should use kebab-aware keyword boundaries: {}",
+            preview.js
+        );
+    }
+
+    #[test]
+    fn textmate_keywords_keep_word_boundaries_without_kebab_case_words() {
+        let m = if let syn::Item::Mod(m) = parse_quote! {
+            mod grammar {
+                #[derive(krust_sitter::Rule)]
+                #[language]
+                #[word(Identifier)]
+                pub struct Program(pub Item);
+
+                #[derive(krust_sitter::Rule)]
+                pub struct Item {
+                    #[leaf("in")]
+                    pub _in: (),
+                    pub ident: Identifier,
+                }
+
+                #[derive(krust_sitter::Rule)]
+                #[leaf(pattern(r"[a-z][a-z0-9_]*"))]
+                pub struct Identifier;
+            }
+        } {
+            m
+        } else {
+            panic!()
+        };
+
+        let grammar = grammar_from_mod(m);
+        let textmate = generate_textmate(&grammar, None);
+        let preview = generate_preview(&grammar, None, &grammar.name);
+
+        assert_eq!(
+            textmate["repository"]["keywords"]["patterns"][0]["match"],
+            r"\b(?:in)\b"
+        );
+        assert!(
+            preview.js.contains(r"regex: /\b(?:in)\b/g"),
+            "preview JS should keep standard word boundaries: {}",
+            preview.js
+        );
     }
 
     #[test]
