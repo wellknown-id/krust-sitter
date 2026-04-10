@@ -667,20 +667,12 @@ fn grammar_keyword_boundary_chars(grammar: &Grammar) -> Option<String> {
         return None;
     }
 
-    chars
-        .to_char_class()
-        .or_else(|| Some("a-zA-Z0-9_-".to_string()))
+    chars.to_char_class()
 }
 
 fn collect_rule_word_boundary_chars(rule_def: &RuleDef, chars: &mut WordBoundaryChars) {
     match rule_def {
-        RuleDef::STRING { value } => {
-            chars.lower |= value.chars().any(|ch| ch.is_ascii_lowercase());
-            chars.upper |= value.chars().any(|ch| ch.is_ascii_uppercase());
-            chars.digit |= value.chars().any(|ch| ch.is_ascii_digit());
-            chars.underscore |= value.contains('_');
-            chars.hyphen |= value.contains('-');
-        }
+        RuleDef::STRING { .. } => {}
         RuleDef::PATTERN { value, .. } => chars.absorb_pattern(value),
         RuleDef::ALIAS { content, .. }
         | RuleDef::FIELD { content, .. }
