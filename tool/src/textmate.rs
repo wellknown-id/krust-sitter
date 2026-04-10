@@ -471,10 +471,7 @@ impl TokenCollector {
                 .join("|");
             js.push_str(&format!(
                 "    {{ regex: /{}/g, cls: '{lang_name}-keyword' }},\n",
-                keyword_match_pattern(
-                    &kw_pattern,
-                    self.word_allows_hyphen,
-                )
+                keyword_match_pattern(&kw_pattern, self.word_allows_hyphen,)
             ));
         }
 
@@ -1114,9 +1111,7 @@ mod tests {
             r"(?<![\w-])(?:in)(?![\w-])"
         );
         assert!(
-            preview
-                .js
-                .contains(r"regex: /(?<![\w-])(?:in)(?![\w-])/g"),
+            preview.js.contains(r"regex: /(?<![\w-])(?:in)(?![\w-])/g"),
             "preview JS should use kebab-aware keyword boundaries: {}",
             preview.js
         );
