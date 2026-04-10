@@ -13,7 +13,7 @@ pub fn generate_textmate(grammar: &Grammar, scope_name: Option<&str>) -> Value {
     let lang_name = &grammar.name;
     let scope = scope_name.unwrap_or(lang_name.as_str());
 
-    let mut collector = TokenCollector::new(scope, grammar_word_allows_hyphen(grammar));
+    let mut collector = TokenCollector::new(scope, grammar_keyword_boundary_chars(grammar));
     // Collect comment patterns from extras.
     collector.collect_extras(&grammar.extras);
     // Walk all rules to collect tokens.
@@ -67,17 +67,17 @@ struct TokenCollector {
     tokens: Vec<CollectedToken>,
     begin_end_pairs: Vec<BeginEndPair>,
     comment_patterns: Vec<CommentPattern>,
-    word_allows_hyphen: bool,
+    keyword_boundary_chars: Option<String>,
     scope: String,
 }
 
 impl TokenCollector {
-    fn new(scope: &str, word_allows_hyphen: bool) -> Self {
+    fn new(scope: &str, keyword_boundary_chars: Option<String>) -> Self {
         Self {
             tokens: Vec::new(),
             begin_end_pairs: Vec::new(),
             comment_patterns: Vec::new(),
-            word_allows_hyphen,
+            keyword_boundary_chars,
             scope: scope.to_string(),
         }
     }
@@ -274,7 +274,7 @@ impl TokenCollector {
                     "patterns": [{
                         "match": keyword_match_pattern(
                             &kw_pattern,
-                            self.word_allows_hyphen,
+                            self.keyword_boundary_chars.as_deref(),
                         ),
                         "name": format!("keyword.control.{scope}")
                     }]
@@ -471,7 +471,7 @@ impl TokenCollector {
                 .join("|");
             js.push_str(&format!(
                 "    {{ regex: /{}/g, cls: '{lang_name}-keyword' }},\n",
-                keyword_match_pattern(&kw_pattern, self.word_allows_hyphen,)
+                keyword_match_pattern(&kw_pattern, self.keyword_boundary_chars.as_deref())
             ));
         }
 
@@ -575,7 +575,7 @@ pub fn generate_preview(
 ) -> PreviewFiles {
     let scope = scope_name.unwrap_or(lang_name);
 
-    let mut collector = TokenCollector::new(scope, grammar_word_allows_hyphen(grammar));
+    let mut collector = TokenCollector::new(scope, grammar_keyword_boundary_chars(grammar));
     collector.collect_extras(&grammar.extras);
     for (rule_name, rule_def) in &grammar.rules {
         collector.collect_rule(rule_name, rule_def);
@@ -589,18 +589,99 @@ pub fn generate_preview(
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-fn grammar_word_allows_hyphen(grammar: &Grammar) -> bool {
-    grammar
-        .word
-        .as_ref()
-        .and_then(|word| grammar.rules.get(word))
-        .is_some_and(rule_allows_hyphen)
+#[derive(Debug, Default, Clone, Copy)]
+struct WordBoundaryChars {
+    lower: bool,
+    upper: bool,
+    digit: bool,
+    underscore: bool,
+    hyphen: bool,
 }
 
-fn rule_allows_hyphen(rule_def: &RuleDef) -> bool {
+impl WordBoundaryChars {
+    fn absorb_pattern(&mut self, pattern: &str) {
+        if pattern.contains(r"\w") {
+            self.lower = true;
+            self.upper = true;
+            self.digit = true;
+            self.underscore = true;
+        }
+
+        if pattern.contains("a-z") {
+            self.lower = true;
+        }
+        if pattern.contains("A-Z") {
+            self.upper = true;
+        }
+        if pattern.contains(r"\d") || pattern.contains("0-9") {
+            self.digit = true;
+        }
+        if pattern.contains('_') {
+            self.underscore = true;
+        }
+        if pattern_allows_hyphen(pattern) {
+            self.hyphen = true;
+        }
+    }
+
+    fn is_empty(self) -> bool {
+        !self.lower && !self.upper && !self.digit && !self.underscore && !self.hyphen
+    }
+
+    fn to_char_class(self) -> Option<String> {
+        if self.is_empty() {
+            return None;
+        }
+
+        let mut class = String::new();
+        if self.lower {
+            class.push_str("a-z");
+        }
+        if self.upper {
+            class.push_str("A-Z");
+        }
+        if self.digit {
+            class.push_str("0-9");
+        }
+        if self.underscore {
+            class.push('_');
+        }
+        if self.hyphen {
+            class.push('-');
+        }
+        Some(class)
+    }
+}
+
+fn grammar_keyword_boundary_chars(grammar: &Grammar) -> Option<String> {
+    let mut chars = WordBoundaryChars::default();
+    collect_rule_word_boundary_chars(
+        grammar
+            .word
+            .as_ref()
+            .and_then(|word| grammar.rules.get(word))?,
+        &mut chars,
+    );
+
+    if !chars.hyphen {
+        return None;
+    }
+
+    chars
+        .to_char_class()
+        .or_else(|| Some("a-zA-Z0-9_-".to_string()))
+}
+
+fn collect_rule_word_boundary_chars(rule_def: &RuleDef, chars: &mut WordBoundaryChars) {
     match rule_def {
-        RuleDef::STRING { value } => value.contains('-'),
-        RuleDef::PATTERN { value, .. } => pattern_allows_hyphen(value),
+        RuleDef::STRING { value } => {
+            chars.lower |= value.chars().any(|ch| ch.is_ascii_lowercase());
+            chars.upper |= value.chars().any(|ch| ch.is_ascii_uppercase());
+            chars.digit |= value.chars().any(|ch| ch.is_ascii_digit());
+            chars.underscore |= value.contains('_');
+            chars.hyphen |= value.contains('-');
+        }
+        RuleDef::PATTERN { value, .. } => chars.absorb_pattern(value),
         RuleDef::ALIAS { content, .. }
         | RuleDef::FIELD { content, .. }
         | RuleDef::TOKEN { content }
@@ -611,11 +692,13 @@ fn rule_allows_hyphen(rule_def: &RuleDef) -> bool {
         | RuleDef::PREC_DYNAMIC { content, .. }
         | RuleDef::REPEAT { content }
         | RuleDef::REPEAT1 { content }
-        | RuleDef::RESERVED { content, .. } => rule_allows_hyphen(content),
+        | RuleDef::RESERVED { content, .. } => collect_rule_word_boundary_chars(content, chars),
         RuleDef::CHOICE { members } | RuleDef::SEQ { members } => {
-            members.iter().any(rule_allows_hyphen)
+            for member in members {
+                collect_rule_word_boundary_chars(member, chars);
+            }
         }
-        RuleDef::SYMBOL { .. } | RuleDef::BLANK => false,
+        RuleDef::SYMBOL { .. } | RuleDef::BLANK => {}
     }
 }
 
@@ -686,9 +769,9 @@ fn pattern_allows_hyphen(pattern: &str) -> bool {
     false
 }
 
-fn keyword_match_pattern(kw_pattern: &str, word_allows_hyphen: bool) -> String {
-    if word_allows_hyphen {
-        format!(r"(?<![\w-])(?:{kw_pattern})(?![\w-])")
+fn keyword_match_pattern(kw_pattern: &str, keyword_boundary_chars: Option<&str>) -> String {
+    if let Some(keyword_boundary_chars) = keyword_boundary_chars {
+        format!(r"(?<![{keyword_boundary_chars}])(?:{kw_pattern})(?![{keyword_boundary_chars}])")
     } else {
         format!(r"\b(?:{kw_pattern})\b")
     }
@@ -1108,10 +1191,12 @@ mod tests {
 
         assert_eq!(
             textmate["repository"]["keywords"]["patterns"][0]["match"],
-            r"(?<![\w-])(?:in)(?![\w-])"
+            r"(?<![a-z0-9-])(?:in)(?![a-z0-9-])"
         );
         assert!(
-            preview.js.contains(r"regex: /(?<![\w-])(?:in)(?![\w-])/g"),
+            preview
+                .js
+                .contains(r"regex: /(?<![a-z0-9-])(?:in)(?![a-z0-9-])/g"),
             "preview JS should use kebab-aware keyword boundaries: {}",
             preview.js
         );
